@@ -3,22 +3,9 @@ Helper libraries used by this project
 Project source follows the dlssg-to-fsr3 repository's GPLv3 license
 (LICENSE.md). The NVIDIA runtime DLL and extracted/recompiled NVIDIA kernel
 assets are separate third-party material from this user's local installation;
-they are not relicensed by LICENSE.md. Native 0.2.3 embeds model/graph/kernel
-data, not the original runtime PE. The offline reference source is the
-unmodified nvngx_dlssg.dll 310.1.0.0 with SHA256:
+they are not relicensed by LICENSE.md. The bundled runtime is an unmodified
+nvngx_dlssg.dll 310.1.0.0 with SHA256:
 c989c0ebd9cd21dbf3db0becd857aa1f218068d94da371d924331a6f0fb97525
-
-SM75 GPU assets: thank you to Coldwood1026 for the RTX 20-series / SM75 work.
-Repository: https://github.com/Coldwood1026/dlssg_for_sm75
-(previous name: Coldwood1026/dlssg_for_sm86).
-Pinned source: https://github.com/Coldwood1026/dlssg_for_sm75/commit/c60c2aa363c7e66a523122aa5cec9c884658ad5f
-No CPU host from that binary is
-embedded. PTX container lengths, termination and alignment were repaired.
-
-SM86 optimized GPU assets: user-supplied dlssg-sm86-kernel-pack.zip, SHA256
-fcbee9f674e49febac16da9cf087e1987e932b065702b08e1147bb2de036fb7b.
-The native host integrates the qualified exact kernel replacements, decoder,
-pair, merge, residual-chain and image fusions; hardware bilinear is optional.
 
 DirectX helper header d3dx12.h
 Copyright (c) Microsoft Corporation. All rights reserved.

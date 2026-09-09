@@ -1,198 +1,126 @@
-# DLSSG SM86 融合版
+# DLSSG Native 0.2.3
 
 简体中文 | [English](README.en.md)
 
-当前 **Release（2026-09-07）** 为首个 milestone，游戏实测、验证范围及已知项见 [测试记录](docs/VALIDATION.md)。
+Windows x64 / D3D12。运行文件为 `version.dll` 和 `dlssg_sm86.ini`。
 
-**将 `version.dll + dlssg_sm86.ini` 放到游戏实际渲染 EXE 旁，照常启动。** 运行时无需 Python 或 PowerShell 启动器。
+自有 C++ 包装层、SM75/SM86 PTX/Cubin、310.1 模型和推理图都在一个 DLL 内。运行时不解压、加载或内存映射原厂 `nvngx_dlssg.dll`；仍使用系统 NVIDIA NGX/NVAPI/CUDA 驱动接口，无需 CUDA Toolkit。
 
-代理 DLL 内嵌配套的原版 DLSSG 310.1（含模型和管线）及其 SM86 后端，默认 `Mode=Bundled`。游戏请求不同版本的 DLSSG 时，统一加载这套内置实现。首次运行将配套文件释放到 `%LOCALAPPDATA%\DlssgSm86\bundles\<bundle-id>`，校验后加载；以后复用缓存，损坏时自动恢复。
+## 0.2.3 简略更新说明
 
-## INI 放在哪里、何时生效
+- **性能**：默认启用已验证的 SM86 精确内核、融合、图像处理和 CUDA 缓冲清理优化，移除变慢的实验路径。3080 Ti 的 4K 4X 离线插帧组耗时相对 Release 0.1.0 从 6.748 ms 降至 4.654 ms；完整数据和游戏实测见下文。
+- **配置**：日常 INI 精简为 5 项。默认 `HardwareBilinear=0` 为精确档，`1` 为可选近似采样，仅 SM86 生效。
+- **安装包**：同包提供 SM75/SM86 路由；`altnative` 增加四种备用代理入口，全部五个 DLL 使用项目自签证书。
+- **兼容修复**：保留 0.2.2 的《悟空》typeless UI 修复和首次 Evaluate 初始化。
 
-配置文件固定命名为 `dlssg_sm86.ini`，放在当前使用的代理 `version.dll` 或 `winmm.dll` 旁。**修改后完全退出并重新启动游戏**，当前没有热重载。
+## 安装与升级
 
-- 布尔开关填写 `0` 或 `1`。以 `;` 开头的行为注释。
-- `Mode`、`KernelImage` 的值不区分大小写。
-- 日志目录、缓存目录和 DLL 路径可以填写绝对路径；相对路径以代理 DLL / INI 所在目录为基准。自定义路径不会展开 `%LOCALAPPDATA%`、`%TEMP%` 等环境变量，请填写实际路径；使用系统默认缓存目录时将 CacheDirectory 留空。
-- 以下“默认值”指随包 INI 中的设置。常规安装保留 `Mode=Bundled` 和两个兼容性开关为 `0`。
-- 使用新选项时同步更新代理 DLL 和 INI，确保程序支持相应设置。
+适用 Windows x64、D3D12 游戏及 NVIDIA 驱动。无需额外安装 Python 或 CUDA Toolkit。当前模型为 310.1；Vulkan 支持见下一版本计划。
 
-## 完整默认配置
+1. **完全退出游戏。** 首次安装直接进行下一步；从旧版升级时，把之前安装的本项目代理 DLL 和 `dlssg_sm86.ini` 备份到单独目录，再移出游戏目录中的旧代理。保留其他 Mod 的文件。
+2. **找到实际渲染 EXE 的目录。** 《黑神话：悟空》为 `D:\SteamLibrary\steamapps\common\BlackMythWukong\b1\Binaries\Win64`，其中应有 `b1-Win64-Shipping.exe`。
+3. **复制一个代理 DLL 和 INI。** 默认复制包根目录的 `version.dll` 与 `dlssg_sm86.ini`。若这个 DLL 名称被其他 Mod 占用，或游戏不会加载它，从 `altnative` 选择一个可用入口，按下表安装。每次只保留本项目的一个代理。
+4. **选择显卡路由。** 3080 Ti 保持 `Router=SM86, KernelImage=PTX`；SM75/Turing 使用 `Router=SM75, KernelImage=PTX`。同一 INI 适用于全部入口。
+5. **重启游戏并启用 DLSS 帧生成。** 在游戏中选择 2X/3X/4X；`MaxGeneratedFrames=3` 表示允许最多额外生成三帧，实际倍率由游戏请求。
 
-```ini
-[General]
-Enabled=1
+| 入口 | 包内位置 | 用法 |
+|---|---|---|
+| 默认 | `version.dll` | 与 INI 放到渲染 EXE 旁 |
+| 替代 | `altnative/winmm.dll` | 选择游戏会加载的名称，原名复制到 EXE 旁 |
+| 替代 | `altnative/dinput8.dll` | 同上 |
+| 替代 | `altnative/winhttp.dll` | 同上 |
+| 替代 | `altnative/dxgi.dll` | 同上；当前仍为 D3D12 管线 |
 
-[FrameGeneration]
-MaxGeneratedFrames=3
+所有 DLL 都包含完整推理资源。替代入口复制时保持原文件名；其他文件可保留在下载目录。不额外混用上游 SM75 包中的代理、注入器或后端。
 
-[Logging]
-Level=2
-File=1
-DebugOutput=0
-EvaluateEvery=120
-Directory=dlssg_sm86\logs
+`HardwareBilinear=0` 为默认精确档；需要可选近似采样时改为 `1`，仅 SM86 生效，生成像素可能变化。两档预设见 [INI 说明](docs/NATIVE_INI.md)。更改配置后重启游戏。
 
-[Debug]
-MarkGeneratedFrames=0
-MarkerX=8
-MarkerY=8
-MarkerScale=2
+排查加载时临时设置 `Logging.Level=2`，日志位于 EXE 旁 `dlssg_sm86/logs`；若未出现项目日志，核对渲染 EXE 目录和所选 DLL 是否由游戏加载。正式游玩可恢复 `Level=1`。保留游戏自带的 DLSSG 文件。卸载时退出游戏，移除本次选择的代理 DLL 和 INI，需要回退时恢复备份。
 
-[Compatibility]
-KernelImage=Auto
-ForceSM86Route=0
-SimulateAmpere=0
+## 杀软误报与签名
 
-[Runtime]
-Mode=Bundled
-CacheDirectory=
-Path=
+本项目通过系统 DLL 代理和 LoadLibrary hook 接入游戏，这类行为可能被安全软件的启发式检测误报。Native 化已经取消原厂 feature DLL 的解压和手动映射，但仍需保留接入 hook；是否属于误报，要结合具体检测结果由对应厂商复核。
 
-[Backends]
+全部五个 DLL 都使用 **DLSSG Native Project 项目自签证书**，可在 Windows 文件属性的“数字签名”中查看。签名用于核验签名者和文件完整性，**不提供 Windows 默认信任，也不保证消除杀软告警**。证书链不受信任、SmartScreen 的信誉提示与杀软检出属于不同检查；自签文件仍可能收到 SmartScreen 提示。[Microsoft SmartScreen 说明](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation)
+
+遇到告警时，先核对下载来源及发布 ZIP 旁的 `.sha256`，再记录安全软件名称、检测名称、病毒库版本和被检测 DLL 的 SHA256，向对应厂商提交误报复核。Microsoft Defender 的提交入口为 [Microsoft 文件分析](https://www.microsoft.com/en-us/wdsi/filesubmission)；核对哈希和签名不能代替厂商的检测结论。
+
+## 统一基线：Release 0.1.0 → Native 0.2.3
+
+本表统一使用 **2026-09-07 的 `dist/Release/version.dll`**，SHA256 `03d445237d519ac48cd9226278a0f07aecd7ac597697697eb64404e1d51b3c5a`。本表两档使用 0.2.3 DLL 的签名前文件 `f5715c29…`；发布包追加签名，PE 内容摘要一致。九个条件全部重新实测，GPU 为 RTX 3080 Ti / SM86，驱动 591.86。
+
+单位为**每个真实帧对应整组帧生成的 GPU 毫秒数**，包含共用预处理；2X/3X/4X 分别生成 1/2/3 帧。默认精确档为 `HardwareBilinear=0`，可选近似档为 `1`。
+
+| 分辨率 | 倍率 | Release 0.1.0 (ms) | 0.2.3 默认精确 (ms) | 耗时降低 | 0.2.3 可选近似 (ms) | 耗时降低 |
+|---|---:|---:|---:|---:|---:|---:|
+| 1080p | 2X | 1.528 | 0.996 | 34.82% | 0.985 | 35.55% |
+| 1080p | 3X | 2.253 | 1.594 | 29.26% | 1.574 | 30.11% |
+| 1080p | 4X | 2.977 | 2.185 | 26.61% | 2.157 | 27.54% |
+| 2K / 1440p | 2X | 2.477 | 1.632 | 34.12% | 1.616 | 34.77% |
+| 2K / 1440p | 3X | 3.674 | 2.591 | 29.49% | 2.557 | 30.40% |
+| 2K / 1440p | 4X | 4.882 | 3.545 | 27.39% | 3.493 | 28.45% |
+| 4K | 2X | 3.138 | 2.090 | 33.38% | 2.048 | 34.74% |
+| 4K | 3X | 4.994 | 3.407 | 31.77% | 3.326 | 33.39% |
+| 4K | 4X | 6.748 | 4.654 | 31.03% | 4.535 | 32.80% |
+
+耗时降低统一按 `(Release 耗时 − 当前耗时) / Release 耗时` 计算，使用未取整数据。毫秒数为各轮中位数的中位数。每个条件四轮，旧 Release 在每轮前后各测一次，精确/近似顺序交替；每次测 256 组，共 144 次运行。GPU 未锁频，未删除异常值。
+
+所有版本使用相同的合成《悟空》资源格式输入、PTX、HIGH=100 计算队列，每次 Evaluate 独立提交；1.5 秒负载预热后 Reset，再预热 64 帧。旧 Release 的内核格式由 Auto/Cubin 显式改为 PTX，其余计算路径来自该原始 DLL。旧版显式加载与内嵌资源一致的 310.1 feature DLL；初始化、解压和加载时间均不计入本表。
+
+精确档计时后输出与旧 Release 逐字节一致；近似档的真实帧及 alpha 不变，生成 RGB 有差异。这里是 GPU pipeline 耗时，整组跨度包含 Evaluate 之间的提交空隙；游戏渲染、Present、上传和读回不计入。不能将耗时降幅当作游戏 FPS 增幅。
+
+## 插帧后帧率怎么估算
+
+先在**相同场景、输出分辨率、DLSS 超分档位和画质设置**下关闭帧生成，得到帧率 `F_off`。用 `1000 / F_off` 换算基础帧时间，再从上表按分辨率、插帧倍率和默认精确／可选近似配置选择整组插帧耗时 `T_FG`（毫秒）。
+
+```text
+基础帧时间 T_base (ms) = 1000 / F_off
+开启插帧后的帧组时间 T_group (ms) ≈ T_base + T_FG
+真实帧／帧组速率 G (组/s) ≈ 1000 / T_group
+插帧后总帧率 F_out (FPS) ≈ G × M
+                       = 1000 × M / (1000 / F_off + T_FG)
 ```
 
-### [General]：总开关
+`M` 是总倍率（2X/3X/4X 对应 2/3/4）。一组包含一个真实帧和 `M − 1` 个生成帧；**上表的 `T_FG` 已包含整组生成帧和共用预处理，不能再乘 `M − 1`**。在这个估算中，开启插帧后的真实帧／帧组速率 `G` 低于关闭插帧的 `F_off`。
 
-| 配置项 | 默认值 | 说明 |
-|---|---|---|
-| `Enabled` | `1` | `1` 启用 DLSSG 重定向、适配、能力上报和可选标记；`0` 保留游戏原始 DLSSG 加载行为。代理仍转发系统 DLL 的原有导出。 |
+例如，未开帧生成约 **50 FPS**，基础帧时间为 **20 ms**。采用上表 RTX 3080 Ti / SM86 的 **4K 4X** 插帧组耗时：
 
-### [FrameGeneration]：上报插帧数量
+| 配置 | 插帧组耗时 T_FG (ms) | 估计帧组时间 (ms) | 估计真实帧／帧组速率 (组/s) | 估计插帧后总帧率 |
+|---|---:|---:|---:|---:|
+| Release 0.1.0 | 6.748 | 26.748 | 37.4 | 149.5 FPS |
+| 0.2.3 默认精确（HardwareBilinear=0） | 4.654 | 24.654 | 40.6 | 162.2 FPS |
+| 0.2.3 可选近似（HardwareBilinear=1） | 4.535 | 24.535 | 40.8 | 163.0 FPS |
 
-| 配置项 | 默认值 | 说明 |
-|---|---|---|
-| `MaxGeneratedFrames` | `3` | 上报的最大“额外生成帧”数量。`0` 保留运行库原有上报；`1` 最多 2×；`2` 最多 3×；`3` 最多 4×。 |
+1080p、1440p 或 2X/3X 时，换用上表对应行，并填入该画质设置下自己测得的 `F_off`。这些插帧耗时来自 3080 Ti / SM86；其他显卡或 SM75 路由应使用对应实测耗时。
 
-例如 `MaxGeneratedFrames=3` 表示每个真实帧间隔最多额外生成 3 帧。**实际生成数量由游戏请求决定**，该设置不会单独增加游戏菜单选项，也不会强制呈现 4×。
+这是将基础渲染时间与插帧组开销相加的**粗略估计**。游戏中的 GPU 资源争用、同步、CPU 开销、限帧及显示器刷新率会影响最终结果；估计值不保证等于计数器读数或实际显示帧率。
 
-当前后端上限为 3；解析器接受的 4–16 会限制到 3，超过 16 或非法数字会导致配置读取失败。正常使用填写 0–3 即可。
+## 《黑神话：悟空》实测反馈
 
-### [Compatibility]：选择 PTX / cubin 与验证模式
+用户提供的 RTX 3080 Ti 同场景近似读数：**4K 输出、DLSS 性能档、全景光线追踪关闭、全影视级画质**。关闭帧生成时约 **50 FPS**，开启 **4X** 后：
 
-| 配置项 | 默认值 | 说明 |
-|---|---|---|
-| `KernelImage` | `Auto` | 内核加载格式，支持 `Auto / PTX / Cubin`，具体行为见下表。缺少此项也使用 Auto。 |
-| `ForceSM86Route` | `0` | `0` 自动识别，真实 SM86 启用适配路径；`1` 允许其他 GPU 强制使用 SM86 后端进行验证，低于 SM86 的 GPU 仍会被拒绝。 |
-| `SimulateAmpere` | `0` | `1` 为验证调整架构报告；必须同时设置 `ForceSM86Route=1`。它不会改变物理 GPU。 |
+| 状态 | 真实帧／帧组速率 | 含生成帧的总帧率 |
+|---|---:|---:|
+| 优化前 | 约 36 组/s | 约 144 FPS |
+| 本次优化后 | 约 40 组/s | 约 160 FPS |
 
-| KernelImage 值 | 路由启用后的行为 |
-|---|---|
-| `Auto` | 真实 SM86 使用预编译的 SM86 cubin；其他 GPU 使用 SM86 PTX。 |
-| `PTX` | 总是使用 SM86 PTX，由驱动 JIT 编译成本机机器码；3080 Ti 也适用。 |
-| `Cubin` | 使用预编译的 SM86 cubin，要求真实 SM86。其他架构会拒绝安装该适配路径；默认 Bundled 模式下会尝试回退原始加载请求。 |
+帧组速率和总帧率均提升约 **11.1%**，即约 **+4 组/s、+16 FPS**。这里记录的是用户反馈的游戏实测，不是上述公式计算出的结果，也不是本次重新执行的自动化游戏测试。与离线默认精确档约 162 FPS 的估算接近，但不能把离线插帧耗时降低 31.03% 直接当作游戏 FPS 增幅。
 
-**KernelImage 只选择内核格式，不单独开启路由。** RTX 3080 Ti 会自动识别为 SM86，使用 Auto、PTX 或 Cubin 时两个兼容性开关均保留 0。未启用 SM86 路由的设备仍使用运行库原生内核。
+## 诊断与边界
 
-该设置不调整模型权重、FP16 精度模式或上报帧数。PTX 需要驱动支持相应的 PTX 版本，首次加载可能发生 JIT 编译。
+默认 `Logging.Level=1` 只记错误；排查时改为 `2` 或 `3`，日志在 `dlssg_sm86/logs`。可选 GPU 计时项见 INI 说明。
 
-### [Logging]：日志输出
+调用方必须提供正反 clip 矩阵；最高生成 3 帧，不支持 6X/动态倍率、Reflex Warp 或 Reflex 自动矩阵查询。输入状态为 NON_PIXEL_SHADER_RESOURCE，输出为 UAV；调用方负责提交、同步和显示。本版优化的是 GPU 计算开销，不能将离线耗时下降当成实测游戏 FPS 增幅。
 
-| 配置项 | 默认值 | 说明 |
-|---|---|---|
-| `Level` | `2` | `0` 关闭日志；`1` 错误；`2` 增加配置、加载和能力信息；`3` 再增加内核创建、Evaluate 和标记信息。 |
-| `File` | `1` | `1` 写日志文件；`0` 关闭文件输出。仍受 Level 控制。 |
-| `DebugOutput` | `0` | `1` 同时通过 Windows 调试输出发送日志，可由调试器接收；不在游戏画面上显示。 |
-| `EvaluateEvery` | `120` | 正常 Evaluate / 标记日志的采样间隔，按 Evaluate 调用计数。`1` 记录每次；`0` 按 120 处理；最大 1,000,000。 |
-| `Directory` | `dlssg_sm86\logs` | 日志目录，可修改为其他非空的相对或绝对目录。 |
+SM75 路由已在 3080 Ti 上完成前向 PTX 检查；物理 Turing/Cubin 和新版游戏长期运行仍待验证。
 
-日志文件名为 `loader_<PID>.jsonl` 和 `backend_<PID>.jsonl`。Level 3 下，前 12 次 Evaluate 会记录，后续正常调用按 `EvaluateEvery` 采样；失败事件仍按错误级别记录。多帧生成可能在一个真实帧间隔内调用多次 Evaluate，因此采样间隔不等于游戏帧数。
+## SM75 来源与致谢
 
-Level 2 通常足够确认配置和内核选择。需要分析逐次调用时再开启 Level 3，它会产生更多日志。
+感谢 **Coldwood1026** 的 RTX 20 系列 / SM75 适配工作。GPU 资源引用 [dlssg_for_sm75](https://github.com/Coldwood1026/dlssg_for_sm75)（原名 `dlssg_for_sm86`）的固定提交 [c60c2aa…](https://github.com/Coldwood1026/dlssg_for_sm75/commit/c60c2aa363c7e66a523122aa5cec9c884658ad5f)，由本项目独立宿主加载和调度。来源及许可见 `THIRD_PARTY_NOTICES.txt`。
 
-### [Debug]：生成帧标记
+## 下一版本计划
 
-| 配置项 | 默认值 | 说明 |
-|---|---|---|
-| `MarkGeneratedFrames` | `0` | `1` 在生成输出上绘制 `FG 1/3` 等实际序号标记；`0` 关闭。真实帧和 Reset 输出跳过。 |
-| `MarkerX` | `8` | 标记左上角的横坐标，单位为输出纹理像素，范围 0–65535。 |
-| `MarkerY` | `8` | 标记左上角的纵坐标，单位为输出纹理像素，范围 0–65535。 |
-| `MarkerScale` | `2` | 标记缩放倍率，范围 1–8。矩形大小为 `24×scale` 宽、`9×scale` 高，默认 48×18 像素。 |
+1. **Vulkan 支持**：增加 Vulkan 资源接入、互操作与同步，并验证 SM75/SM86 路径。
+2. **模型更新到最新 DLSSG**：实施时固定最新可用版本及哈希，适配模型/推理图并评估画质、显存和耗时。
 
-标记必须完整位于输出纹理内部；超出范围会绘制失败，日志中记录 `marker_failed`。标记会实际修改生成帧像素，因此做全图数值比较时关闭标记，或单独比较标记矩形之外的区域。
-
-### [Runtime]：运行库选择和缓存
-
-| 配置项 | 默认值 | 说明 |
-|---|---|---|
-| `Mode` | `Bundled` | 运行库来源，支持 `Bundled / Auto / Pinned`。这里的 Auto 与 KernelImage=Auto 是两个独立选项。 |
-| `CacheDirectory` | 空 | 空值使用 `%LOCALAPPDATA%\DlssgSm86\bundles`；非空时使用指定缓存根目录，程序在其下按 bundle ID 建立子目录。 |
-| `Path` | 空 | 仅 Pinned 使用，应明确填写目标原版 `nvngx_dlssg.dll` 的路径。Bundled 和 Auto 不使用此项。 |
-
-| Mode 值 | 行为 |
-|---|---|
-| `Bundled` | 使用代理内嵌的运行库和配套后端。普通安装使用这个模式，无须填写 Path 或 Backends。 |
-| `Auto` | 加载游戏请求的原运行库。内置已知哈希可自动配套后端；其他版本需另有匹配后端，否则保留原库行为。 |
-| `Pinned` | 尝试使用 Path 指定的原运行库，并要求有匹配后端。目标缺失或不满足选择条件时保留原始请求，详情见日志。 |
-
-Bundled 固定使用本包的 310.1 模型，不会自动采用游戏自带新 DLL 的模型改进。默认模式下，缓存释放、运行库加载或后端安装失败会记录 `runtime_selection_failed` 并尝试原始请求；回退成功不表示 SM86 路由已经生效。
-
-### [Backends]：高级外部后端映射
-
-默认留空，仅 Auto / Pinned 模式的外部运行库适配需要填写。键是目标原运行库文件的完整 SHA256，值是与它匹配的后端 DLL 路径：
-
-```ini
-[Backends]
-; 将占位符换成原运行库的完整 SHA256；此行为格式示例。
-; <runtime-sha256>=backends\matching_backend.dll
-```
-
-映射项不会自动适配未知 DLL，后端必须确实支持目标文件。显式选择 PTX / Cubin 时，外部后端还需支持内核选择扩展；旧后端不支持时会记录 `kernel_selection_unsupported` 并拒绝安装。Auto 内核选择仍兼容原 ABI 1 后端。
-
-## 常用配置示例
-
-下面是要修改的片段，在已有同名分节中替换对应键即可；其他参数保留完整默认配置。
-
-### 3080 Ti：使用 PTX JIT
-
-```ini
-[Compatibility]
-KernelImage=PTX
-ForceSM86Route=0
-SimulateAmpere=0
-```
-
-恢复预编译 cubin 可将 KernelImage 改回 Auto，或明确设为 Cubin。无需开启架构模拟。
-
-### 开启生成帧标记
-
-```ini
-[Debug]
-MarkGeneratedFrames=1
-MarkerX=8
-MarkerY=8
-MarkerScale=2
-```
-
-标记分母来自游戏实际请求数量。例如上限设为 3、游戏实际只请求 1 张时，标记为 `FG 1/1`。
-
-## 如何确认配置生效
-
-在 Level 2 或 3 的日志中检查：
-
-| 事件 / 字段 | 含义 |
-|---|---|
-| loader：`configuration` | 本次读取的 INI、运行库模式与内核格式请求。`requested_max` 是 INI 请求值，尚未应用后端上限；实际上报值看 `mfg_capability`。 |
-| backend：`install` | 安装准备阶段记录。`actual_sm` 是物理架构；`active` 是本次计划启用的 SM86 路由状态；`kernel_image_requested` 是请求值，`image` 是选定格式。该事件早于钩子安装完成。 |
-| loader：`backend_install` | `status=0` 表示后端安装调用成功；还需结合 `install.active` 判断是否启用了 SM86 内核替换。非零状态表示安装失败。 |
-| `image=ptx_sm86` | 已选择 SM86 PTX。 |
-| `image=cubin_sm86` | 已选择 SM86 cubin。 |
-| `image=original` | 本次没有启用内核替换，使用运行库原生内核。 |
-| `mfg_capability` | 运行库原上限与本次上报的最大生成帧数。 |
-| Level 3：`kernel_create` | 每次内核创建实际使用的格式与返回状态。 |
-| Level 3：`evaluate` / `frame_marker` | 实际生成数量、调用结果或标记序号。 |
-
-确认路由安装成功时，同时检查 `install.active=true` 和对应的 `backend_install.status=0`。仅出现 `image=ptx_sm86` / `cubin_sm86` 不能证明内核已经创建或执行；实际推理还需检查后续 `kernel_create`、`evaluate` 及其结果。
-
-非法数字、枚举值或组合会导致配置读取失败；日志开启时可见 `configuration_error`。SM86 cubin 与物理 GPU 不匹配等后端错误可在 `install_failed` 中查看。恢复默认 INI 后重启可重新验证。
-
-## 安装注意与卸载
-
-游戏不导入 VERSION.dll 时，可改用 `alternatives/winmm.dll`，它同样内嵌完整运行库。只启用一种代理；已有同名 mod 时需要处理入口冲突，当前没有实现任意代理链。
-
-目前针对 Windows x64 / D3D12。M1 已在 RTX 3080 Ti / 驱动 591.86 上完成 Auto、PTX、Cubin 离线执行和同机输出一致性检查，同一代理在悟空和赛博朋克中实际执行 Auto/cubin 的 2X、4X；悟空还覆盖关闭后重新开启。
-
-用户手动实测关闭 / 2X / 4X：悟空约 50 / 80 / 150 FPS，赛博朋克路径追踪约 35 / 60 / 100 FPS，并反馈相对稳定。详见 [验证记录](docs/VALIDATION.md)。结果绑定 M1 的 DLL 哈希，其他产物以自身 `manifest.json` 的状态为准。规范化帧时间、延迟和长期稳定性尚未测量；固定参考的数值差异作为 M1 已知项保留。
-
-卸载时退出游戏，移走本包添加的代理和 INI。缓存可保留供其他安装使用。原 NVIDIA DLL 及内核资源的归属见 `THIRD_PARTY_NOTICES.txt`。
+当前版本仍为 D3D12 + 310.1 模型。详细计划见 [路线图](docs/ROADMAP.md)。
