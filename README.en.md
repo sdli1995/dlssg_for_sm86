@@ -13,6 +13,29 @@ The DLL contains the native C++ wrapper, SM75/SM86 PTX/Cubin, model and inferenc
 - **Package**: SM75/SM86 routes share one package. Four alternate proxy entry points are available in `altnative`, and all five DLLs carry the project self-signature.
 - **Compatibility fixes**: the Wukong typeless UI fix and initialization on first Evaluate from 0.2.2 are retained.
 
+## Requirements
+
+- **System and game**: Windows 10/11 x64, D3D12, and a game that can enable DLSS frame generation through this mod. The CPU and system RAM must still meet the game's own requirements.
+- **GPU and route**: the SM86 route targets RTX 30-series GPUs; SM75 targets RTX 20-series GPUs. Physical validation currently uses RTX 3080 Ti. SM75 has been tested through forward PTX on that GPU; physical Turing/Cubin validation remains outstanding.
+- **Driver and dependencies**: NVIDIA driver NGX/NVAPI/CUDA interfaces are required. These measurements used driver 591.86; that is a tested version, not a declared minimum. CUDA Toolkit and Python are unnecessary for playing.
+- **VRAM**: allow for the game itself, additional FG resources and scene-dependent headroom. Windows and other applications also consume VRAM, so consider the memory budget available to the game.
+
+### Additional VRAM by configuration
+
+The following reference budgets use 0.2.3 on RTX 3080 Ti, driver 591.86 and PTX. The 27 additional cases cover SM86 exact, SM86 approximate and the SM75 route. Select by final **output resolution**: 4K output with DLSS Performance still uses the 4K row.
+
+| Output resolution | 2X: estimated additional VRAM | 3X: estimated additional VRAM | 4X: estimated additional VRAM |
+|---|---:|---:|---:|
+| 1080p / 1920×1080 | About 320 MiB | About 330 MiB | About 340 MiB |
+| 2K / 2560×1440 | About 490 MiB | About 510 MiB | About 520 MiB |
+| 4K / 3840×2160 | About 700 MiB | About 740 MiB | About 770 MiB |
+
+Values use the warmed-up process-local VRAM increase, subtract the benchmark's preloaded input and test-output allocation, then add one group of `M` 32-bit output buffers. They are rounded up to 10 MiB (1 GiB = 1024 MiB). These are steady-state estimates. Game resources, additional frames in flight, swapchains and larger pixel formats need further memory; **reserve extra headroom above these figures**. The table does not establish a game's minimum card capacity or peak usage. SM75 figures are route references measured on 3080 Ti.
+
+Exact and approximate modes used the same VRAM in these measurements. The SM75 route differed by less than 1 MiB and uses the same rounded budget. 2X/3X/4X reuse resident inference resources, so lowering the multiplier mainly reduces output buffers and may not substantially reduce total VRAM usage.
+
+**Insufficient VRAM or exceeding the Windows-assigned memory budget can cause occasional stutters and frame-time spikes, even when average FPS looks normal.** Lower texture quality, output resolution or ray tracing, and reduce background VRAM usage to leave room for scene changes and resource loading. [Microsoft video-memory budget guidance](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_4/nf-dxgi1_4-idxgiadapter3-queryvideomemoryinfo)
+
 ## Installation and upgrade
 
 Requirements: Windows x64, a D3D12 game and NVIDIA drivers. Python and CUDA Toolkit are unnecessary for playing. The current model is 310.1; Vulkan is planned for a later release.
