@@ -1,4 +1,4 @@
-# DLSSG Native 0.2.3
+# DLSSG Native 0.2.4
 
 [简体中文](README.md) | English
 
@@ -6,12 +6,12 @@ Windows x64 / D3D12. Install `version.dll` and `dlssg_sm86.ini` beside the actua
 
 The DLL contains the native C++ wrapper, SM75/SM86 PTX/Cubin, model and inference graph. It does not extract, load or memory-map the original frame-generation DLL. Installed NVIDIA NGX/NVAPI/CUDA driver interfaces are still required; CUDA Toolkit is unnecessary.
 
-## What's new in 0.2.3
+## What's new in 0.2.4
 
-- **Performance**: verified exact SM86 kernels, fusions, image processing and CUDA buffer clearing are enabled by default; slower experimental paths are removed. On 3080 Ti, offline 4K 4X FG group time falls from 6.748 ms in Release 0.1.0 to 4.654 ms. Full timings and gameplay observations follow below.
-- **Configuration**: the everyday INI has five settings. `HardwareBilinear=0` is the default exact mode; `1` enables optional approximate sampling on SM86 only.
-- **Package**: SM75/SM86 routes share one package. Four alternate proxy entry points are available in `altnative`, and all five DLLs carry the project self-signature.
-- **Compatibility fixes**: the Wukong typeless UI fix and initialization on first Evaluate from 0.2.2 are retained.
+- **VRAM**: fix retained old frame textures after input resources are recreated; recycle views after actual resource destruction to prevent this source of accumulated VRAM usage.
+- **Frame history**: fix HUD-less and distortion history updates across missing inputs and Reset, addressing incorrect generated frames reproduced offline.
+- **Output validity**: set the flag used to skip invalid generated frames, preventing callers from relying on a stale value.
+- **Defaults unchanged**: retain exact performance optimizations, optional approximate sampling, five INI settings and five signed proxy entry points. Dynamic-input, SM75-route and memory regressions were added; the reported game flicker still needs in-game retesting.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ The DLL contains the native C++ wrapper, SM75/SM86 PTX/Cubin, model and inferenc
 
 ### Additional VRAM by configuration
 
-The following reference budgets use 0.2.3 on RTX 3080 Ti, driver 591.86 and PTX. The 27 additional cases cover SM86 exact, SM86 approximate and the SM75 route. Select by final **output resolution**: 4K output with DLSS Performance still uses the 4K row.
+The following reference budgets use 0.2.4 on RTX 3080 Ti, driver 591.86 and PTX. The 27 additional cases cover SM86 exact, SM86 approximate and the SM75 route. Select by final **output resolution**: 4K output with DLSS Performance still uses the 4K row.
 
 | Output resolution | 2X: estimated additional VRAM | 3X: estimated additional VRAM | 4X: estimated additional VRAM |
 |---|---:|---:|---:|
@@ -60,29 +60,31 @@ All five DLLs are signed with the **DLSSG Native Project self-signed certificate
 
 If a detection occurs, first check the download source and the release ZIP against its `.sha256` sidecar. Record the security product, detection name, definition version and detected DLL's SHA256, then request a false-positive review from that vendor. For Microsoft Defender, use [Microsoft file analysis](https://www.microsoft.com/en-us/wdsi/filesubmission). Matching hashes and signatures do not replace the vendor's detection assessment.
 
-## Unified baseline: Release 0.1.0 → Native 0.2.3
+## Unified baseline: Release 0.1.0 → Native 0.2.4
 
-Every row uses the **2026-09-07 `dist/Release/version.dll`**, SHA256 `03d445237d519ac48cd9226278a0f07aecd7ac597697697eb64404e1d51b3c5a`, as the baseline. Both modes were measured with the unsigned 0.2.3 DLL `f5715c29…`; the release adds a signature with an identical PE image digest. All nine conditions were freshly measured on RTX 3080 Ti / SM86, driver 591.86.
+Every row uses the **2026-09-07 `dist/Release/version.dll`**, SHA256 `03d445237d519ac48cd9226278a0f07aecd7ac597697697eb64404e1d51b3c5a`, as the baseline. Both modes use the signed 0.2.4 DLL `c844646d…`, the same file included in this release. All nine conditions were freshly measured on RTX 3080 Ti / SM86, driver 591.86.
 
 Times are **GPU milliseconds for the entire frame-generation group per real frame**, including shared preprocessing. 2X/3X/4X generate 1/2/3 frames. Exact is the default (`HardwareBilinear=0`); approximate sampling is optional (`1`).
 
-| Resolution | Multiplier | Release 0.1.0 (ms) | 0.2.3 exact (ms) | Reduction | 0.2.3 approximate (ms) | Reduction |
+| Resolution | Multiplier | Release 0.1.0 (ms) | 0.2.4 exact (ms) | Reduction | 0.2.4 approximate (ms) | Reduction |
 |---|---:|---:|---:|---:|---:|---:|
-| 1080p | 2X | 1.528 | 0.996 | 34.82% | 0.985 | 35.55% |
-| 1080p | 3X | 2.253 | 1.594 | 29.26% | 1.574 | 30.11% |
-| 1080p | 4X | 2.977 | 2.185 | 26.61% | 2.157 | 27.54% |
-| 2K / 1440p | 2X | 2.477 | 1.632 | 34.12% | 1.616 | 34.77% |
-| 2K / 1440p | 3X | 3.674 | 2.591 | 29.49% | 2.557 | 30.40% |
-| 2K / 1440p | 4X | 4.882 | 3.545 | 27.39% | 3.493 | 28.45% |
-| 4K | 2X | 3.138 | 2.090 | 33.38% | 2.048 | 34.74% |
-| 4K | 3X | 4.994 | 3.407 | 31.77% | 3.326 | 33.39% |
-| 4K | 4X | 6.748 | 4.654 | 31.03% | 4.535 | 32.80% |
+| 1080p | 2X | 1.530 | 0.990 | 35.26% | 0.981 | 35.90% |
+| 1080p | 3X | 2.252 | 1.594 | 29.23% | 1.572 | 30.21% |
+| 1080p | 4X | 2.979 | 2.201 | 26.13% | 2.160 | 27.49% |
+| 2K / 1440p | 2X | 2.497 | 1.638 | 34.38% | 1.629 | 34.77% |
+| 2K / 1440p | 3X | 3.774 | 2.610 | 30.84% | 2.575 | 31.78% |
+| 2K / 1440p | 4X | 4.958 | 3.579 | 27.82% | 3.706 | 25.26% |
+| 4K | 2X | 3.186 | 2.099 | 34.12% | 2.066 | 35.14% |
+| 4K | 3X | 5.071 | 3.453 | 31.90% | 3.366 | 33.61% |
+| 4K | 4X | 7.115 | 4.804 | 32.48% | 4.752 | 33.20% |
 
 Reduction is `(Release time − current time) / Release time`, calculated before rounding. Times are medians of run medians. Each condition has four rounds, a Release run before and after each round, and alternating exact/approximate order. Each run measures 256 groups: 144 runs in total. Clocks were not locked; no outliers were removed.
 
 All modes use identical synthetic Wukong-format inputs, PTX, a HIGH=100 compute queue, and independent submission of each Evaluate. A 1.5-second load soak is followed by Reset and 64 warm-up frames. Old Release Auto/Cubin is explicitly overridden to PTX. Its original 310.1 feature DLL is loaded explicitly with a matching payload hash; initialization, extraction and loading costs are outside timing.
 
 Post-timing exact outputs match Release byte for byte. Approximate mode preserves real frames and alpha while changing generated RGB. The group GPU span includes submission gaps between Evaluate calls. Rendering, Present, uploads and readbacks are excluded; these reductions are not measured game FPS gains.
+
+The 1440p 4X runs varied substantially, and the approximate median was slower than the exact median; the table retains those results. In 20 additional interleaved runs against 0.2.3, each mode's median differed by less than 0.4% between versions, without reproducing a clear regression. Approximate sampling is not guaranteed to be faster; use the default exact mode first.
 
 ## Estimating FPS with frame generation
 
@@ -103,8 +105,8 @@ For example, **50 FPS without FG** gives a **20 ms** base frame time. Using the 
 | Configuration | FG group time T_FG (ms) | Estimated frame-group time (ms) | Estimated real-frame / group rate (groups/s) | Estimated total FPS |
 |---|---:|---:|---:|---:|
 | Release 0.1.0 | 6.748 | 26.748 | 37.4 | 149.5 |
-| 0.2.3 default exact (HardwareBilinear=0) | 4.654 | 24.654 | 40.6 | 162.2 |
-| 0.2.3 optional approximate (HardwareBilinear=1) | 4.535 | 24.535 | 40.8 | 163.0 |
+| 0.2.4 default exact (HardwareBilinear=0) | 4.804 | 24.804 | 40.3 | 161.3 FPS |
+| 0.2.4 optional approximate (HardwareBilinear=1) | 4.752 | 24.752 | 40.4 | 161.6 FPS |
 
 For 1080p, 1440p or 2X/3X, use the matching row and your own measured `F_off` at those settings. These timings were measured on 3080 Ti / SM86; other GPUs or the SM75 route need their own group timings.
 
@@ -117,9 +119,9 @@ User-reported approximate readings from the same scene on **RTX 3080 Ti, 4K outp
 | State | Real-frame / group rate | Total FPS including generated frames |
 |---|---:|---:|
 | Before optimization | About 36 groups/s | About 144 |
-| After this optimization | About 40 groups/s | About 160 |
+| User report after the 0.2.3 optimization | About 40 groups/s | About 160 |
 
-Both rates improve by about **11.1%**: **+4 groups/s and +16 FPS**. These are the user's gameplay observations, separate from the calculated estimates; no new automated game test was run for this documentation update. The result is close to the default exact estimate of about 162 FPS, but the 31.03% reduction in offline FG time does not translate directly into the same percentage increase in game FPS.
+Both rates improve by about **11.1%**: **+4 groups/s and +16 FPS**. These are the user's gameplay observations, separate from the calculated estimates; these historical 0.2.3 observations have not been rerun in the game for 0.2.4. Offline FG time reductions do not translate directly into the same percentage increase in game FPS.
 
 ## Configuration
 
