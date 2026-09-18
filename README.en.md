@@ -43,7 +43,7 @@ Enables NVIDIA DLSS Frame Generation (DLSS-G) on RTX 30-series (SM86) and RTX 20
 - Driver: an NVIDIA driver with the NGX / NVAPI / CUDA interfaces; tested on 591.86 and 610.74. The cubins need roughly R580+; older drivers fall back to PTX automatically (one extra JIT on the first frame only).
 - No CUDA Toolkit and no Python.
 
-Both release zips install the same way; only the embedded runtime and the ceiling differ. The 310.9 build matches the 310.1 build at 4X and below, and additionally supports 6X.The root directory contains the latest DLSSG version, 310.9, while 310.1 is the older version.
+Both release zips install the same way; only the embedded runtime and the ceiling differ. The 310.9 build matches the 310.1 build at 4X and below, and additionally supports 6X. The root directory contains the latest DLSSG version, 310.9, while 310.1 is the older version.
 
 
 ## Extra VRAM by configuration
