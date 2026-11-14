@@ -102,10 +102,6 @@ libxess_fg.dll running that port offline. The relabel of model 15 as model 16
 that makes the provider run it was identified by the authors of the "XessFG
 Model 15 Final" package; the frame-count unlock is MFG-Unlocker's.
 
-The method that extracts the MFG model natively (how model 15 and its weights
-were obtained) is dashdogy's RTX40MFG-Unlock v1.4.2:
-https://github.com/dashdogy/RTX40MFG-Unlock/releases/tag/v1.4.2
-
 DirectX helper header d3dx12.h
 Copyright (c) Microsoft Corporation. All rights reserved.
 SPDX-License-Identifier: MIT

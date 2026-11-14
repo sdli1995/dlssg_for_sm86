@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dlssg_sm86.ini · GeForce Configurator</title>
+<style>
+  /* ============ 设计令牌 ============ */
+  :root{
+    --nv:#76B900;
+    --nv-hi:#9BE000;
+    --nv-lo:#5a8f00;
+    --bg:#050506;
+    --text:#f2f4f0;
+    --muted:#98a196;
+    --dim:#5d675c;
+    --stroke:rgba(255,255,255,.12);
+    --err:#ff5f5f;
+    --warn:#ffc043;
+    --info:#4cc2ff;
+    --r:22px;
+    --font:"Helvetica Neue",Helvetica,Arial,"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    min-height:100vh;
+    font:15px/1.6 var(--font);
+    color:var(--text);
+    background:
+      radial-gradient(1100px 760px at 8% -18%, rgba(118,185,0,.20), transparent 62%),
+      radial-gradient(900px 700px at 102% 108%, rgba(0,145,255,.13), transparent 60%),
+      radial-gradient(700px 500px at 50% 50%, rgba(255,255,255,.025), transparent 70%),
+      var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+  code{font-family:var(--mono);font-size:.87em}
+
+  /* ============ 液态玻璃基础类 ============ */
+  .glass{
+    position:relative;
+    background:linear-gradient(148deg,
+      rgba(255,255,255,.085) 0%,
+      rgba(255,255,255,.028) 38%,
+      rgba(255,255,255,.045) 72%,
+      rgba(118,185,0,.055) 100%);
+    -webkit-backdrop-filter:blur(28px) saturate(170%);
+    backdrop-filter:blur(28px) saturate(170%);
+    border:1px solid var(--stroke);
+    border-radius:var(--r);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.24),
+      inset 0 -1px 0 rgba(0,0,0,.40),
+      inset 1px 0 0 rgba(255,255,255,.06),
+      0 20px 50px -20px rgba(0,0,0,.9);
+    overflow:hidden;
+    isolation:isolate;
+  }
+  .glass::after{
+    content:"";
+    position:absolute; inset:0;
+    border-radius:inherit;
+    background:linear-gradient(115deg,
+      rgba(255,255,255,.18) 0%,
+      rgba(255,255,255,0) 26%,
+      rgba(255,255,255,0) 74%,
+      rgba(118,185,0,.14) 100%);
+    pointer-events:none;
+    z-index:0;
+    mix-blend-mode:screen;
+  }
+
+  /* ============ 顶栏 ============ */
+  .topbar{
+    position:sticky; top:0; z-index:30;
+    display:flex; flex-wrap:wrap; gap:16px;
+    align-items:center; justify-content:space-between;
+    padding:14px 24px;
+    background:linear-gradient(180deg, rgba(8,10,8,.86), rgba(8,10,8,.62));
+    -webkit-backdrop-filter:blur(30px) saturate(180%);
+    backdrop-filter:blur(30px) saturate(180%);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    box-shadow:0 1px 0 rgba(118,185,0,.28), 0 18px 40px -30px #000;
+  }
+  .brand{display:flex; align-items:center; gap:13px; min-width:0}
+  .logo{
+    width:42px; height:42px; flex:0 0 42px;
+    display:grid; place-items:center;
+    border-radius:11px;
+    background:linear-gradient(155deg, var(--nv-hi), var(--nv) 45%, var(--nv-lo));
+    color:#08120a;
+    font-weight:900; font-size:19px; letter-spacing:-1px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.55),
+      inset 0 -2px 4px rgba(0,0,0,.35),
+      0 0 26px -4px rgba(118,185,0,.75);
+    transform:skewX(-6deg);
+  }
+  .logo span{transform:skewX(6deg)}
+  .brand h1{
+    margin:0; font-size:15px; font-weight:700;
+    letter-spacing:.9px; text-transform:uppercase;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .brand p{
+    margin:1px 0 0; font-size:11.5px; letter-spacing:.5px;
+    color:var(--muted); text-transform:uppercase; font-weight:500;
+  }
+  .actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+
+  /* ============ 按钮 ============ */
+  .btn{
+    appearance:none; cursor:pointer; font-family:inherit;
+    display:inline-flex; align-items:center; gap:7px;
+    padding:9px 16px; border-radius:11px;
+    font-size:12.5px; font-weight:600; letter-spacing:.4px;
+    color:var(--text);
+    background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.035));
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 6px 18px -10px #000;
+    -webkit-backdrop-filter:blur(12px);
+    backdrop-filter:blur(12px);
+    transition:transform .14s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+  }
+  .btn:hover{
+    transform:translateY(-1px);
+    border-color:rgba(255,255,255,.26);
+    background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.06));
+  }
+  .btn:active{transform:translateY(0) scale(.985)}
+  .btn.primary{
+    color:#08120a; font-weight:800;
+    background:linear-gradient(180deg, var(--nv-hi), var(--nv) 55%, #67a400);
+    border:1px solid rgba(190,255,60,.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.62),
+      inset 0 -2px 5px rgba(0,0,0,.28),
+      0 8px 26px -10px rgba(118,185,0,.95);
+  }
+  .btn.primary:hover{
+    background:linear-gradient(180deg, #b0f700, var(--nv-hi) 55%, #74b800);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.7),
+      0 10px 32px -10px rgba(118,185,0,1);
+  }
+  .btn.ghost{background:transparent}
+  .btn.ghost:hover{background:rgba(255,255,255,.07)}
+
+  /* ============ 语言开关（两个大按钮） ============ */
+  .lang-switch{
+    display:inline-flex; gap:10px;
+    padding-left:14px;
+    margin-left:6px;
+    border-left:1px solid rgba(255,255,255,.12);
+  }
+  .btn.lang{
+    min-width:96px; justify-content:center;
+    padding:12px 22px;
+    font-size:14px; font-weight:800; letter-spacing:.9px;
+    color:var(--muted);
+    border-color:rgba(255,255,255,.16);
+    background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+  }
+  .btn.lang:hover{
+    color:var(--text);
+    border-color:rgba(255,255,255,.3);
+    background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.06));
+  }
+  .btn.lang.active{
+    color:#08120a;
+    border-color:rgba(190,255,60,.5);
+    background:linear-gradient(180deg, var(--nv-hi), var(--nv) 55%, #67a400);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.62),
+      inset 0 -2px 5px rgba(0,0,0,.28),
+      0 8px 24px -10px rgba(118,185,0,.95);
+  }
+  .btn.lang.active:hover{
+    background:linear-gradient(180deg, #b0f700, var(--nv-hi) 55%, #74b800);
+    color:#08120a;
+  }
+
+  /* ============ 布局 ============ */
+  main{
+    position:relative; z-index:1;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(360px,460px);
+    gap:20px;
+    padding:22px 24px 80px;
+    max-width:1740px; margin:0 auto;
+    align-items:start;
+  }
+  @media(max-width:1080px){
+    main{grid-template-columns:1fr; padding:18px 14px 70px}
+    .side{position:static !important}
+    .topbar{padding:12px 14px}
+    .lang-switch{padding-left:0; margin-left:0; border-left:0; width:100%}
+  }
+
+  /* ============ 卡片 ============ */
+  .card{margin-bottom:18px; transition:opacity .22s ease, border-color .22s ease, filter .22s ease}
+  .card.muted{opacity:.44; filter:saturate(.4)}
+  .card.muted:hover{opacity:.72}
+  .card-head{padding:16px 20px 0; position:relative; z-index:2}
+  .card-head h2{
+    margin:0 0 5px;
+    font-size:14px; font-weight:700;
+    letter-spacing:1.1px; text-transform:uppercase;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .sec-name{
+    font-family:var(--mono); font-size:11.5px; font-weight:700;
+    letter-spacing:.6px; text-transform:none;
+    color:#0a1300;
+    background:linear-gradient(180deg, var(--nv-hi), var(--nv));
+    padding:3px 10px 3px 12px;
+    clip-path:polygon(9px 0, 100% 0, 100% 100%, 0 100%);
+    box-shadow:0 0 18px -6px rgba(118,185,0,.9);
+  }
+  .card-desc{margin:0; font-size:12.5px; line-height:1.7; color:var(--muted)}
+  .badge-off{
+    display:none; font-size:10.5px; font-weight:700; letter-spacing:.6px;
+    text-transform:uppercase;
+    color:var(--warn);
+    border:1px solid rgba(255,192,67,.35);
+    background:rgba(255,192,67,.09);
+    padding:2px 8px; border-radius:20px;
+  }
+  .card.muted .badge-off{display:inline-block}
+
+  .fields{
+    padding:14px 20px 18px; position:relative; z-index:2;
+    display:flex; flex-direction:column; gap:18px;
+  }
+  .field{border-top:1px solid rgba(255,255,255,.055); padding-top:16px}
+  .field:first-child{border-top:0; padding-top:2px}
+  .field[hidden]{display:none}
+
+  .field-head{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:8px; flex-wrap:wrap;
+  }
+  .field-head label{
+    font-size:13.5px; font-weight:650; letter-spacing:.2px;
+    display:flex; align-items:center; gap:9px; cursor:pointer;
+  }
+  .field-head label::before{
+    content:""; width:3px; height:15px; border-radius:2px;
+    background:linear-gradient(180deg, var(--nv-hi), var(--nv-lo));
+    box-shadow:0 0 10px rgba(118,185,0,.85);
+    flex:0 0 3px;
+  }
+  .field-head label code{
+    color:var(--dim); font-weight:500; font-size:11.5px;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.09);
+    padding:1px 7px; border-radius:6px;
+  }
+  .def{
+    font-size:11px; color:var(--dim);
+    letter-spacing:.4px; text-transform:uppercase; font-weight:600;
+  }
+
+  /* ============ 控件 ============ */
+  .ctl{
+    width:100%; padding:11px 14px;
+    border-radius:12px;
+    font:inherit; font-size:13.5px;
+    color:var(--text);
+    background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.32));
+    border:1px solid rgba(255,255,255,.11);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 -1px 6px rgba(0,0,0,.5);
+    outline:none;
+    transition:border-color .16s, box-shadow .16s, background .16s;
+  }
+  .ctl:hover{border-color:rgba(255,255,255,.2)}
+  .ctl:focus{
+    border-color:rgba(118,185,0,.85);
+    background:linear-gradient(180deg, rgba(0,0,0,.6), rgba(20,30,10,.4));
+    box-shadow:
+      0 0 0 3px rgba(118,185,0,.16),
+      inset 0 1px 0 rgba(255,255,255,.09),
+      0 0 22px -8px rgba(118,185,0,.8);
+  }
+  select.ctl{
+    appearance:none; cursor:pointer;
+    padding-right:38px;
+    background-image:
+      linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.32)),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath fill='%2376B900' d='M5.5 7 0 0h11z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat, no-repeat;
+    background-position:0 0, right 14px center;
+    background-size:100% 100%, 11px 7px;
+  }
+  select.ctl option{background:#111410; color:#e9ece6}
+
+  .help{margin:9px 0 0; font-size:12.5px; line-height:1.78; color:var(--muted)}
+  .help b{color:#cfd8cb; font-weight:650}
+  .help code{
+    color:var(--nv-hi);
+    background:rgba(118,185,0,.10);
+    border:1px solid rgba(118,185,0,.22);
+    padding:1px 6px; border-radius:5px;
+  }
+  body.hide-help .help{display:none}
+
+  /* ============ 侧栏 ============ */
+  .side{
+    position:sticky; top:88px;
+    display:flex; flex-direction:column; gap:18px;
+  }
+  .subttl{
+    color:var(--dim); font-weight:600; font-size:11px; letter-spacing:1px;
+  }
+  .fileinfo{
+    padding:0 20px 12px;
+    font-size:11.5px; color:var(--muted);
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    position:relative; z-index:2;
+    letter-spacing:.4px; text-transform:uppercase; font-weight:600;
+  }
+  .fileinfo .name{
+    color:var(--nv-hi); font-family:var(--mono);
+    text-transform:none; font-size:12px; letter-spacing:0;
+  }
+
+  #preview{
+    margin:0; padding:16px 18px;
+    max-height:50vh; overflow:auto;
+    position:relative; z-index:2;
+    font-family:var(--mono); font-size:11.6px; line-height:1.7;
+    color:#a9b8a4;
+    background:linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,.28));
+    border-top:1px solid rgba(255,255,255,.07);
+    white-space:pre; tab-size:2;
+    text-shadow:0 0 22px rgba(118,185,0,.12);
+  }
+  #preview::-webkit-scrollbar{width:10px; height:10px}
+  #preview::-webkit-scrollbar-thumb{
+    background:linear-gradient(180deg, rgba(118,185,0,.55), rgba(118,185,0,.25));
+    border-radius:9px; border:3px solid transparent; background-clip:padding-box;
+  }
+  #preview::-webkit-scrollbar-track{background:transparent}
+
+  /* ============ 校验消息 ============ */
+  #validation{padding:16px 20px 18px; position:relative; z-index:2}
+  .msg{
+    display:flex; gap:11px;
+    padding:11px 13px; margin-bottom:9px;
+    border-radius:13px; font-size:12.6px; line-height:1.65;
+    background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  .msg:last-child{margin-bottom:0}
+  .msg .dot{
+    flex:0 0 8px; width:8px; height:8px; border-radius:50%;
+    margin-top:7px; background:var(--muted);
+  }
+  .msg code{color:var(--nv-hi)}
+  .msg.err{border-color:rgba(255,95,95,.34); background:rgba(255,95,95,.08)}
+  .msg.err .dot{background:var(--err); box-shadow:0 0 10px var(--err)}
+  .msg.warn{border-color:rgba(255,192,67,.34); background:rgba(255,192,67,.08)}
+  .msg.warn .dot{background:var(--warn); box-shadow:0 0 10px var(--warn)}
+  .msg.info{border-color:rgba(76,194,255,.30); background:rgba(76,194,255,.07)}
+  .msg.info .dot{background:var(--info); box-shadow:0 0 10px var(--info)}
+  .msg.ok{border-color:rgba(118,185,0,.38); background:rgba(118,185,0,.09)}
+  .msg.ok .dot{background:var(--nv); box-shadow:0 0 12px var(--nv)}
+
+  /* ============ Toast ============ */
+  #toast{
+    position:fixed; left:50%; bottom:30px; z-index:90;
+    transform:translate(-50%, 18px);
+    padding:11px 22px; border-radius:13px;
+    font-size:13px; font-weight:600; letter-spacing:.3px;
+    color:#08120a;
+    background:linear-gradient(180deg, var(--nv-hi), var(--nv));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.6),
+      0 16px 40px -12px rgba(118,185,0,.9);
+    opacity:0; pointer-events:none;
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  #toast.show{opacity:1; transform:translate(-50%, 0)}
+
+  /* ============ 拖放提示 ============ */
+  body.dragging::after{
+    content:"松开以载入 INI 文件";
+    position:fixed; inset:0; z-index:100;
+    display:grid; place-items:center;
+    font-size:19px; font-weight:800; letter-spacing:2px; text-transform:uppercase;
+    color:var(--nv-hi);
+    background:rgba(3,5,3,.76);
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+    box-shadow:inset 0 0 0 3px rgba(118,185,0,.55), inset 0 0 120px rgba(118,185,0,.18);
+  }
+  html[lang="en"] body.dragging::after{content:"Drop to load the INI file"}
+
+  /* ===== XeSS 卡片：Intel 蓝主题（覆盖 GeForce 绿） ===== */
+  .card[data-sec="XeSSFG"]{
+    background:linear-gradient(148deg,
+      rgba(255,255,255,.085) 0%,
+      rgba(255,255,255,.028) 38%,
+      rgba(255,255,255,.045) 72%,
+      rgba(0,113,197,.10) 100%);
+  }
+  .card[data-sec="XeSSFG"]::after{
+    background:linear-gradient(115deg,
+      rgba(255,255,255,.18) 0%,
+      rgba(255,255,255,0) 26%,
+      rgba(255,255,255,0) 74%,
+      rgba(0,145,255,.18) 100%);
+  }
+  .card[data-sec="XeSSFG"] .sec-name{
+    color:#eaf6ff;
+    background:linear-gradient(180deg, #55BEFF, #0071C5 58%, #00559A);
+    box-shadow:0 0 20px -5px rgba(0,145,255,.95);
+  }
+  .card[data-sec="XeSSFG"] .field-head label::before{
+    background:linear-gradient(180deg, #7FD8FF, #0071C5);
+    box-shadow:0 0 12px rgba(0,145,255,.9);
+  }
+  .card[data-sec="XeSSFG"] .ctl:focus{
+    border-color:rgba(0,145,255,.9);
+    background:linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,18,36,.4));
+    box-shadow:
+      0 0 0 3px rgba(0,145,255,.16),
+      inset 0 1px 0 rgba(255,255,255,.09),
+      0 0 24px -8px rgba(0,145,255,.9);
+  }
+  .card[data-sec="XeSSFG"] select.ctl{
+    background-image:
+      linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.32)),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath fill='%2300A3FF' d='M5.5 7 0 0h11z'/%3E%3C/svg%3E");
+  }
+  .card[data-sec="XeSSFG"] .help code{
+    color:#7FD4FF;
+    background:rgba(0,113,197,.14);
+    border-color:rgba(0,145,255,.28);
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo"><span>G</span></div>
+    <div>
+      <h1 data-i18n="brandTitle"></h1>
+      <p data-i18n="brandSub"></p>
+    </div>
+  </div>
+  <div class="actions">
+    <input type="file" id="fileInput" accept=".ini,.txt,text/plain" hidden>
+    <button class="btn" id="btnOpen" data-i18n="btnOpen"></button>
+    <button class="btn primary" id="btnDownload" data-i18n="btnDownload"></button>
+    <button class="btn" id="btnCopy" data-i18n="btnCopy"></button>
+    <button class="btn ghost" id="btnReset" data-i18n="btnReset"></button>
+    <button class="btn ghost" id="btnHelp"></button>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button class="btn lang" id="btnLangZh" type="button">中文</button>
+      <button class="btn lang" id="btnLangEn" type="button">English</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="controls"></section>
+
+  <aside class="side">
+    <div class="card glass">
+      <div class="card-head">
+        <h2 data-i18n="valTitle"></h2>
+      </div>
+      <div id="validation"></div>
+    </div>
+
+    <div class="card glass">
+      <div class="card-head">
+        <h2 data-i18n="prevTitle"></h2>
+      </div>
+      <div class="fileinfo">
+        <span class="name" id="fileName">dlssg_sm86.ini</span>
+        <span id="stat"></span>
+      </div>
+      <pre id="preview"></pre>
+    </div>
+  </aside>
+</main>
+
+<div id="toast"></div>
+
+<!-- ================= 默认 INI（原样内嵌，注释与格式零损失） ================= -->
+<script type="text/plain" id="defaultIni">; DLSSG SM86 - frame generation for Ampere (RTX 30) and newer.
+; Copy version.dll, this INI and the dlssg_sm86\ folder beside the rendering EXE. Use ONE proxy DLL at a time:
+; version.dll first. Only if the game never loads it, delete it and try the proxies in alternatives\ one by one, in this
+; order: winmm.dll, dbghelp.dll, dinput8.dll, then dxgi.dll or d3d12.dll (render-path proxies: last resort, never both).
+; See alternatives\README.md.
+; The DLSS-G runtime, the SM86 backend, the kernel packs and the super-resolution snippet are FILES under dlssg_sm86\,
+; found relative to the proxy's own folder - nothing is embedded and nothing is ever written to %LOCALAPPDATA%. Restart
+; the game after changing this file.
+; This is the full release configuration: four consistency tiers. Every diagnostic / compatibility / performance knob
+; still works but is left out here and takes its safe, validated default; the complete list is in docs\INSTALL.md / INSTALL.en.md
+; (advanced / diagnostic keys).
+; A value that is invalid or out of range is never replaced by a default: the log gets one configuration_invalid and the
+; feature it belongs to is not enabled (frame generation as with Enabled=0, super resolution as with Mode=Off).
+; 值写错或越界不会被换成默认值：日志记一条 configuration_invalid，该键所属功能不启用（帧生成同 Enabled=0，超分同 Mode=Off）。
+; RTX 20 (Turing) 用这份文件即可，不需要加任何键：内核族按物理显卡自动选到 SM75，游戏那道架构闸门也自动放行。
+; 其余进阶键（Router / KernelImage / SpoofArchToGame / 抓取与诊断等）全部见 docs\INSTALL.md。
+; 两个插帧引擎：公共键在 [FrameGeneration] / [Runtime] / [Logging]，DLSS 专用键在 [DLSSG]，XeSS 专用键在 [XeSSFG]；另一个引擎的键不读。
+; Two engines: common keys in [FrameGeneration] / [Runtime] / [Logging], DLSS-only keys in [DLSSG], XeSS-only in [XeSSFG].
+
+[General]
+; 1 = frame generation on (our bundled, Ampere-optimized DLSS-G runtime). 0 = off: the game's own DLSS-G loads
+; unchanged, which means no frame generation on Ampere. The proxy still forwards the real system DLL either way.
+Enabled=1
+
+[FrameGeneration]
+; Engine: DLSS = NVIDIA's DLSS-G model on this project's SM86/SM75 kernels (default). XeSS = Intel's XeSS-FG model 15
+; (as ported by MFG-Unlocker 1.6.0; its 2X is model 18) on this project's own runner (dlssg_sm86\xefg\xefg_kernels.dll;
+; Intel's libxess_fg.dll is not used): 2X / 3X / 4X (MaxGeneratedFrames 1-3). A back buffer it cannot run (RGBA16F) is
+; refused, it never falls back to DLSS.
+; 插帧引擎：DLSS = NVIDIA DLSS-G 模型（本项目的 SM86/SM75 内核，默认）；XeSS = Intel XeSS-FG model 15（MFG-Unlocker 1.6.0
+; 的移植，2X 是 model 18）在本项目自己的运行器上跑，不用 Intel 的 libxess_fg.dll：2X / 3X / 4X（MaxGeneratedFrames 1-3）；
+; 它跑不了的后缓冲格式（RGBA16F）直接拒绝，不退回 DLSS。
+Engine=DLSS
+; Generated frames per real frame: 3 = 4X (factory default), 5 = 6X (the most the bundled runtime 310.9.16 supports).
+; A requirement, not a hint: it is advertised to the game exactly (a driver profile cannot lower it), and the game's own
+; menu may pick less. Where it cannot be served (above 5, above 3 under Engine=XeSS, an old 2X-only game plugin) frame
+; generation is not enabled and the log says why (max_generated_frames_unsupported). A game whose own Streamline plugin
+; is 4X stays at 4X either way.
+; 每个真实帧生成几帧：3 = 4X（出厂），5 = 6X（随包运行库 310.9.16 的上限）。这是要求不是上限：原样告诉游戏（驱动 profile
+; 压不低它），游戏菜单可以选更低。做不到时（超过 5、Engine=XeSS 时超过 3、只能 2X 的旧插件）帧生成不启用并在日志里说明。
+MaxGeneratedFrames=3
+
+[DLSSG]
+; Read only by Engine=DLSS. / 只对 Engine=DLSS 生效。
+; Consistency tier: how far the generated image may move from what the official NVIDIA runtime would produce. The old
+; places [FrameGeneration] Optimized / [Compatibility] OptimizedKernels are no longer read.
+; 一致性档位：允许生成的画面偏离官方运行库多远。数字越大越快、离官方画面越远。旧位置 [FrameGeneration] Optimized /
+; [Compatibility] OptimizedKernels 不再读取。
+; 0 = stock, the runtime's original numerics only / 原厂内核，不做任何加速（最保守）
+; 1 = every acceleration that keeps the output BIT-IDENTICAL to the official runtime (default)
+;     / 默认：全部逐位一致的加速（画面与官方完全相同）
+; 2 = tier 1 plus lossy image kernels. Not bit-identical: 44-53 dB PSNR against the official output on real 4K
+;     captures, lowest on the fastest motion; side by side against ground truth, no difference from tier 1 was visible.
+;     / 在档位 1 上再加有损图像内核。不再逐位一致：真实 4K 抓取上对官方输出 PSNR 44-53 dB（运动越快越低）；
+;     对着真值并排看，与档位 1 看不出差别。
+; 3 = everything lossy that is still faster / 全部有损加速（画质代价最大，最快）
+; Tiers 2 and 3 are not bit-exact. / 档位 2、3 不再逐位一致。
+Optimized=1
+; DLSS-G render preset. What is written here runs, whatever the game or a driver profile asks for.
+; A (default) = UI recomposition off, FG Lite off. B = UI recomposition on (cleaner HUD/UI inside generated frames), but
+; only when the game hands DLSS-G both a HUD-less image and a UI plane; most games do not, and then B looks like A.
+; C = FG Lite: lighter candidate blending, about 32-54 % less GPU time per generated frame, slightly lower image quality
+; (mostly on the HUD and at occlusion edges); uses this project's accelerated kernels like the default.
+; Auto was removed on 2026-10-22 (it runs as A); the old place [Compatibility] Preset is no longer read.
+; 渲染预设：这里写什么就跑什么，游戏或驱动配置要别的也不变。A（默认）= 不做 UI 重组、不开轻量插帧；B = UI 重组（游戏同时
+; 交出无 HUD 画面和 UI 平面时才有效果，多数游戏不交，那时与 A 相同）；C = 轻量插帧：每个生成帧 GPU 时间约少 32-54 %，
+; 画质略低（主要在 HUD 与遮挡边缘）。Auto 已于 2026-10-22 删除（按 A）；旧位置 [Compatibility] Preset 不再读取。
+Preset=A
+
+[XeSSFG]
+; Read only by Engine=XeSS. / 只对 Engine=XeSS 生效。
+; Optical-flow resolution: Coarse / Middle / Fine; finer is slower. / 光流分辨率：Coarse / Middle / Fine，越细越慢。
+; CoarseAt4K = Coarse when the output has >= 3840x2160 pixels, else Middle. / CoarseAt4K = 输出像素 >= 3840x2160 时 Coarse，否则 Middle。
+FlowResolution=Middle
+; Auto = same as 0 (default): the back buffer is the network source and the whole image, UI included, is
+; interpolated, whether the game supplies a HUD-less image or not (C139). 1 = always (a game that supplies none ends with an error); 0 = never.
+; Auto = 与 0 相同（默认）：整幅画面（含 UI）一起插值，游戏给不给无 HUD 画面都一样（C139）；1 = 一律用（游戏没给就报错退出）；0 = 不用。
+UseHudless=Auto
+; (The model is Intel's model 15 as ported by MFG-Unlocker 1.6.0 - MIT; 46 of its programs fall under Intel's XeSS SDK
+; terms, THIRD_PARTY_NOTICES.txt - whose 2X is model 18; it ships inside xefg_kernels.dll. The Model key was removed on
+; 2026-10-26 and is not read. RTX 3070, 4X: faster than DLSS default at 1440p, slower at 4K.)
+; （模型是 MFG-Unlocker 1.6.0 移植的 Intel model 15——MIT；其中 46 个程序归 Intel XeSS SDK 条款，见 THIRD_PARTY_NOTICES.txt——
+; 2X 是 model 18，随包在 xefg_kernels.dll 里。Model 键 2026-10-26 删除，不再读取。RTX 3070 4X：1440p 比 DLSS 默认快，4K 比它慢。）
+
+[Logging]
+; 0 = off, 1 = errors, 2 = configuration and capability, 3 = kernel and evaluation traces. Written to Directory.
+; One file, Directory\dlssg_sm86.log, shared by every module of every process; each line starts with the local time,
+; pid, EXE name and level letter (E = 1, I = 2, D = 3), then the JSON record. Filter by EXE name or pid for one game.
+; 0 = 关闭，1 = 错误，2 = 配置与能力，3 = 内核与 Evaluate 追踪。所有模块、所有进程都追加写 Directory\dlssg_sm86.log 这一个文件；
+; 每行先是本地时间、pid、EXE 名和级别字母（E = 1 / I = 2 / D = 3），再是 JSON 记录；只看一个游戏时按 EXE 名或 pid 过滤。
+Level=1
+Directory=dlssg_sm86\logs
+
+[Runtime]
+; Bundled = the packaged runtime beside this INI, dlssg_sm86\runtime\nvngx_dlssg.dll, with its backend (normal use;
+; no game DLL version matching). External / Pinned are advanced, see docs\INSTALL.md. Auto was removed in 0.4.0
+; (it runs as Bundled). A runtime that cannot be used - the packaged one missing, or a Path that names a wrong file -
+; turns frame generation off with one error in the log; nothing else is loaded in its place. A runtime whose preset
+; layout this build does not know is refused at install, whatever [DLSSG] Preset says.
+; 运行库来源：Bundled = 随包的 310.9.16（正常用这个）；Auto 已在 0.4.0 删除（按 Bundled）。运行库用不了（随包的缺失、Path 指错文件）时帧生成不启用，日志记一条错误，不会改用别的运行库；预设布局本构建不认识的运行库在安装时即被拒绝，不论 [DLSSG] Preset 写什么。
+Mode=Bundled
+
+[SuperResolution]
+; DLSS Super Resolution, RTX 30 / RTX 20 only. Off = not touched (default). M-INT8 / L-INT8 = preset M / L on every
+; quality mode (the game's menu picks the mode), run on this project's INT8 kernels; M-FP16 / L-FP16 = the same preset on
+; NVIDIA's own kernels. On Quality / Balanced / DLAA, M or L is slower than the game's own preset K.
+; 超分（仅 RTX 30 / 20）：Off = 不介入（默认）；M-INT8 / L-INT8 = 所有画质档都用预设 M / L（档位在游戏里选），跑本项目的
+; INT8 内核；M-FP16 / L-FP16 = 同一预设、NVIDIA 自己的内核。画质 / 平衡 / DLAA 档用 M / L 比游戏自己的 K 慢。
+Mode=Off
+</script>
+
+<script>
+/* =========================================================================
+   语言：默认 English，用户选择后记住
+   ========================================================================= */
+let LANG = (() => {
+  const saved = localStorage.getItem('dlssg_lang');
+  if (saved === 'zh' || saved === 'en') return saved;
+  return 'en';
+})();
+
+/* 取文案：字符串直接返回，{zh,en} 取当前语言 */
+function L(v) {
+  return (v && typeof v === 'object') ? (v[LANG] ?? v.zh ?? '') : (v ?? '');
+}
+
+/* 静态 UI 文案 */
+const T = {
+  brandTitle: { zh: 'dlssg_sm86.ini 配置工具', en: 'dlssg_sm86.ini Configurator' },
+  brandSub:   { zh: 'DLSS-G / XeSS-FG · RTX 20 / 30 及以上', en: 'DLSS-G / XeSS-FG · RTX 20 / 30 and newer' },
+  btnOpen:    { zh: '📂 打开 INI', en: '📂 Open INI' },
+  btnDownload:{ zh: '⬇ 下载', en: '⬇ Download' },
+  btnCopy:    { zh: '⧉ 复制', en: '⧉ Copy' },
+  btnReset:   { zh: '↺ 重置', en: '↺ Reset' },
+  btnHelp:    { zh: '💡 说明', en: '💡 Help' },
+  btnHelpShow:{ zh: '💡 显示说明', en: '💡 Show help' },
+  valTitle:   { zh: '校验 <span class="subttl">/ VALIDATION</span>', en: 'Validation <span class="subttl">/ 校验</span>' },
+  prevTitle:  { zh: '实时预览 <span class="subttl">/ PREVIEW</span>', en: 'Live preview <span class="subttl">/ 实时预览</span>' },
+  lblDefault: { zh: '默认', en: 'Default' },
+  lblNoSec:   { zh: '当前引擎不使用本节', en: 'Not used by the current engine' },
+  lblCurrent: { zh: '（文件中的当前值）', en: '(current value in file)' },
+  lblLines:   { zh: ' 行', en: ' lines' },
+  toastLoaded:{ zh: '已载入 ', en: 'Loaded ' },
+  toastDown:  { zh: '已下载 ', en: 'Downloaded ' },
+  toastCopy:  { zh: '已复制到剪贴板', en: 'Copied to clipboard' },
+  toastReset: { zh: '已恢复到载入时的内容', en: 'Reverted to the loaded content' }
+};
+
+/* =========================================================================
+   字段定义
+   ========================================================================= */
+const SECTIONS = [
+  {
+    sec: 'General',
+    title: { zh: '常规', en: 'General' },
+    desc: {
+      zh: '帧生成总开关。代理 DLL 在两种情况下都会把真正的系统 DLL 转发给游戏。',
+      en: 'Master switch for frame generation. Either way, the proxy DLL still forwards the real system DLL to the game.'
+    },
+    fields: [{
+      key: 'Enabled',
+      label: { zh: '帧生成开关', en: 'Frame generation' },
+      type: 'select', def: '1',
+      options: [
+        ['1', { zh: '1 · 开启（使用随包、针对 Ampere 优化的 DLSS-G 运行库插帧）',
+                en: '1 · On (the bundled, Ampere-optimized DLSS-G runtime does the frame generation)' }],
+        ['0', { zh: '0 · 关闭（游戏自带的 DLSS-G 原样加载，RTX 30 上就没有插帧了）',
+                en: '0 · Off (the game’s own DLSS-G loads unchanged — no frame generation on Ampere)' }]
+      ],
+      help: {
+        zh: '<b>1</b> = 启用随包的、为 Ampere 优化的 DLSS-G 运行库来插帧。<br><b>0</b> = 关闭：游戏自带的 DLSS-G 原样加载，也就是 RTX 30 上没有帧生成。无论哪种，代理 DLL 都会把真正的系统 DLL 转发过去。',
+        en: '<b>1</b> = the bundled, Ampere-optimized DLSS-G runtime does the frame generation.<br><b>0</b> = off: the game’s own DLSS-G loads unchanged, which means no frame generation on Ampere. Either way, the proxy DLL still forwards the real system DLL.'
+      }
+    }]
+  },
+  {
+    sec: 'FrameGeneration',
+    title: { zh: '帧生成', en: 'Frame Generation' },
+    desc: {
+      zh: '两个引擎二选一：DLSS = NVIDIA 模型；XeSS = Intel XeSS-FG model 15（本项目自己的运行器，支持 2X / 3X / 4X）。',
+      en: 'Pick one engine: DLSS = NVIDIA’s model; XeSS = Intel XeSS-FG model 15 (this project’s own runner, 2X / 3X / 4X).'
+    },
+    fields: [
+      {
+        key: 'Engine',
+        label: { zh: '插帧引擎', en: 'Engine' },
+        type: 'select', def: 'DLSS',
+        options: [
+          ['DLSS', { zh: 'DLSS · NVIDIA DLSS-G 模型（本项目 SM86/SM75 内核，默认）',
+                     en: 'DLSS · NVIDIA DLSS-G model on this project’s SM86/SM75 kernels (default)' }],
+          ['XeSS', { zh: 'XeSS · Intel XeSS-FG model 15（本项目自己的运行器，2X / 3X / 4X）',
+                     en: 'XeSS · Intel XeSS-FG model 15 (this project’s own runner, 2X / 3X / 4X)' }]
+        ],
+        help: {
+          zh: '<b>DLSS</b>（默认）= NVIDIA 的 DLSS-G 模型，跑在本项目的 SM86 / SM75 内核上。<br><b>XeSS</b> = Intel 的 XeSS-FG <b>model 15</b>（MFG-Unlocker 1.6.0 的移植，其 2X 实际是 model 18），用本项目自己的运行器（<code>dlssg_sm86\\xefg\\xefg_kernels.dll</code>），不使用 Intel 的 <code>libxess_fg.dll</code>；支持 <b>2X / 3X / 4X</b>（MaxGeneratedFrames 1–3）。它跑不了的后缓冲格式（RGBA16F）会直接拒绝，<b>不会退回 DLSS</b>。',
+          en: '<b>DLSS</b> (default) = NVIDIA’s DLSS-G model on this project’s SM86 / SM75 kernels.<br><b>XeSS</b> = Intel’s XeSS-FG <b>model 15</b> (ported by MFG-Unlocker 1.6.0; its 2X is model 18), running on this project’s own runner (<code>dlssg_sm86\\xefg\\xefg_kernels.dll</code>); Intel’s <code>libxess_fg.dll</code> is not used. Supports <b>2X / 3X / 4X</b> (MaxGeneratedFrames 1–3). A back buffer it cannot run (RGBA16F) is refused — it <b>never falls back to DLSS</b>.'
+        }
+      },
+      {
+        key: 'MaxGeneratedFrames',
+        label: { zh: '每帧生成帧数', en: 'Generated frames per real frame' },
+        type: 'select', def: '3',
+        options: [
+          ['1', { zh: '1 · 2X', en: '1 · 2X' }],
+          ['2', { zh: '2 · 3X', en: '2 · 3X' }],
+          ['3', { zh: '3 · 4X（出厂默认）', en: '3 · 4X (factory default)' }],
+          ['4', { zh: '4 · 5X（仅 Engine=DLSS）', en: '4 · 5X (Engine=DLSS only)' }],
+          ['5', { zh: '5 · 6X（仅 Engine=DLSS，随包运行库 310.9.16 的上限）',
+                  en: '5 · 6X (Engine=DLSS only; the most runtime 310.9.16 supports)' }]
+        ],
+        help: {
+          zh: '<b>这是要求，不是上限</b>：会原样告诉游戏，驱动 profile 压不低它，游戏自己的菜单仍可选更低。<br>做不到时（超过 5、Engine=XeSS 时超过 3、只能 2X 的旧插件）帧生成不启用，日志会写明原因（<code>max_generated_frames_unsupported</code>）。游戏自带 Streamline 插件是 4X 的，无论如何都停在 4X。',
+          en: '<b>A requirement, not a hint</b>: it is advertised to the game exactly (a driver profile cannot lower it), and the game’s own menu may still pick less.<br>Where it cannot be served (above 5, above 3 under Engine=XeSS, an old 2X-only game plugin) frame generation is not enabled and the log says why (<code>max_generated_frames_unsupported</code>). A game whose own Streamline plugin is 4X stays at 4X either way.'
+        }
+      }
+    ]
+  },
+  {
+    sec: 'DLSSG',
+    title: { zh: 'DLSS 专用', en: 'DLSS only' },
+    desc: {
+      zh: '只对 Engine=DLSS 生效。旧位置的 [FrameGeneration] Optimized 与 [Compatibility] OptimizedKernels 已不再读取。',
+      en: 'Read only by Engine=DLSS. The old places [FrameGeneration] Optimized and [Compatibility] OptimizedKernels are no longer read.'
+    },
+    fields: [
+      {
+        key: 'Optimized',
+        label: { zh: '一致性档位', en: 'Consistency tier' },
+        type: 'select', def: '1',
+        options: [
+          ['0', { zh: '0 · 原厂内核，不做任何加速（最保守）',
+                  en: '0 · Stock kernels, no acceleration at all (most conservative)' }],
+          ['1', { zh: '1 · 全部逐位一致的加速（默认，画面与官方完全相同）',
+                  en: '1 · Every acceleration that keeps the output bit-identical to the official runtime (default)' }],
+          ['2', { zh: '2 · 档位 1 + 有损图像内核（不再逐位一致）',
+                  en: '2 · Tier 1 plus lossy image kernels (no longer bit-identical)' }],
+          ['3', { zh: '3 · 全部有损加速（画质代价最大，最快）',
+                  en: '3 · Everything lossy that is still faster (biggest image cost, fastest)' }]
+        ],
+        help: {
+          zh: '允许生成的画面偏离官方运行库多远：数字越大越快、离官方画面越远。<br><b>0</b> = 原厂数值，不做任何加速。<b>1</b>（默认）= 全部保持与官方<b>逐位一致</b>的加速。<b>2</b> = 档位 1 再加有损图像内核，不再逐位一致——真实 4K 抓取上对官方输出 PSNR 44–53 dB（运动越快越低），对着真值并排看与档位 1 看不出差别。<b>3</b> = 全部有损加速。档位 2、3 都不是逐位一致。',
+          en: 'How far the generated image may move from what the official runtime would produce: higher is faster and further from the official output.<br><b>0</b> = stock numerics, no acceleration. <b>1</b> (default) = every acceleration that keeps the output <b>bit-identical</b> to the official runtime. <b>2</b> = tier 1 plus lossy image kernels, no longer bit-identical — 44–53 dB PSNR against the official output on real 4K captures (lowest on the fastest motion); side by side against ground truth, no difference from tier 1 was visible. <b>3</b> = everything lossy that is still faster. Tiers 2 and 3 are not bit-exact.'
+        }
+      },
+      {
+        key: 'Preset',
+        label: { zh: '渲染预设', en: 'Render preset' },
+        type: 'select', def: 'A',
+        options: [
+          ['A', { zh: 'A · 默认（不做 UI 重组、不开轻量插帧）',
+                  en: 'A · Default (UI recomposition off, FG Lite off)' }],
+          ['B', { zh: 'B · UI 重组（生成的帧里 HUD / UI 更干净）',
+                  en: 'B · UI recomposition (cleaner HUD / UI inside generated frames)' }],
+          ['C', { zh: 'C · 轻量插帧 FG Lite（每帧 GPU 时间约省 32–54%）',
+                  en: 'C · FG Lite (about 32–54 % less GPU time per generated frame)' }]
+        ],
+        help: {
+          zh: '<b>这里写什么就跑什么</b>，游戏或驱动配置要别的也不会变。<br><b>A</b>（默认）= 不做 UI 重组、不开轻量插帧。<b>B</b> = UI 重组：只有游戏同时交出无 HUD 画面和 UI 平面时才有效果，多数游戏不交，那时与 A 相同。<b>C</b> = 轻量插帧 FG Lite：更轻的候选混合，每个生成帧 GPU 时间约少 32–54%，画质略低（主要在 HUD 与遮挡边缘），内核仍用本项目的加速版。<br>Auto 已于 2026-10-22 删除（按 A 执行）。',
+          en: '<b>What is written here runs</b>, whatever the game or a driver profile asks for.<br><b>A</b> (default) = UI recomposition off, FG Lite off. <b>B</b> = UI recomposition: only when the game hands DLSS-G both a HUD-less image and a UI plane; most games do not, and then B looks like A. <b>C</b> = FG Lite: lighter candidate blending, about 32–54 % less GPU time per generated frame, slightly lower image quality (mostly on the HUD and at occlusion edges); uses this project’s accelerated kernels like the default.<br>Auto was removed on 2026-10-22 (it runs as A).'
+        }
+      }
+    ]
+  },
+  {
+    sec: 'XeSSFG',
+    title: { zh: 'XeSS 专用', en: 'XeSS only' },
+    desc: {
+      zh: '只对 Engine=XeSS 生效。模型固定为 Intel model 15（2X 为 model 18）；Model 键已于 2026-10-26 删除，不再读取。',
+      en: 'Read only by Engine=XeSS. The model is fixed to Intel model 15 (its 2X is model 18); the Model key was removed on 2026-10-26 and is no longer read.'
+    },
+    fields: [
+      {
+        key: 'FlowResolution',
+        label: { zh: '光流分辨率', en: 'Optical-flow resolution' },
+        type: 'select', def: 'Middle',
+        options: [
+          ['Coarse', { zh: 'Coarse · 粗（最快）', en: 'Coarse · Coarse (fastest)' }],
+          ['Middle', { zh: 'Middle · 中（默认）', en: 'Middle · Middle (default)' }],
+          ['Fine', { zh: 'Fine · 细（最慢）', en: 'Fine · Fine (slowest)' }],
+          ['CoarseAt4K', { zh: 'CoarseAt4K · 输出 ≥ 3840×2160 时 Coarse，否则 Middle',
+                           en: 'CoarseAt4K · Coarse when the output is ≥ 3840×2160, else Middle' }]
+        ],
+        help: {
+          zh: '光流分辨率：Coarse / Middle / Fine，<b>越细越慢</b>。<br><b>CoarseAt4K</b> = 输出像素 ≥ 3840×2160 时用 Coarse，否则用 Middle。',
+          en: 'Optical-flow resolution: Coarse / Middle / Fine; <b>finer is slower</b>.<br><b>CoarseAt4K</b> = Coarse when the output has ≥ 3840×2160 pixels, else Middle.'
+        }
+      },
+      {
+        key: 'UseHudless',
+        label: { zh: 'UI 合成', en: 'UI composition' },
+        type: 'select', def: 'Auto',
+        options: [
+          ['Auto', { zh: 'Auto · 与 0 相同：整幅画面含 UI 一起插值（默认）',
+                     en: 'Auto · Same as 0: the whole image, UI included, is interpolated (default)' }],
+          ['1', { zh: '1 · 一律合成（游戏没给 hudless 就报错退出）',
+                  en: '1 · Always composite (a game that supplies none ends with an error)' }],
+          ['0', { zh: '0 · 不合成', en: '0 · Never composite' }]
+        ],
+        help: {
+          zh: '<b>UI 合成</b>：分离 hudless 与 UI，只对 hudless 插值，UI 以原帧率组合到插值后的 hudless 画面上。<br><b>Auto</b>（默认）= 与 <b>0</b> 相同：整幅画面（含 UI）一起插值，游戏给不给无 HUD 画面都一样（2026-11-10 起）。<b>1</b> = 一律使用，游戏没提供时直接报错退出。<b>0</b> = 从不使用。',
+          en: '<b>UI composition</b>: split hudless and UI, interpolate the hudless image only, then composite the UI onto the interpolated hudless picture at the original frame rate.<br><b>Auto</b> (default) = the same as <b>0</b>: the whole image, UI included, is interpolated, whether the game supplies a HUD-less image or not (since 2026-11-10). <b>1</b> = always; a game that supplies none ends with an error. <b>0</b> = never.'
+        }
+      }
+    ]
+  },
+  {
+    sec: 'Logging',
+    title: { zh: '日志', en: 'Logging' },
+    desc: {
+      zh: '所有模块、所有进程追加写同一个日志文件，每行先是本地时间、pid、EXE 名和级别字母，再是 JSON 记录。',
+      en: 'Every module of every process appends to one file: local time, pid, EXE name, level letter, then the JSON record.'
+    },
+    fields: [
+      {
+        key: 'Level',
+        label: { zh: '日志级别', en: 'Log level' },
+        type: 'select', def: '1',
+        options: [
+          ['0', { zh: '0 · 关闭', en: '0 · Off' }],
+          ['1', { zh: '1 · 仅错误（E，默认）', en: '1 · Errors only (E, default)' }],
+          ['2', { zh: '2 · 配置与能力（I）', en: '2 · Configuration and capability (I)' }],
+          ['3', { zh: '3 · 内核与 Evaluate 追踪（D）', en: '3 · Kernel and Evaluate traces (D)' }]
+        ],
+        help: {
+          zh: '<b>0</b> = 关闭；<b>1</b>（默认）= 错误；<b>2</b> = 配置与能力；<b>3</b> = 内核与 Evaluate 追踪。<br>级别字母：E = 1、I = 2、D = 3。只看一个游戏时按 EXE 名或 pid 过滤日志即可。',
+          en: '<b>0</b> = off; <b>1</b> (default) = errors; <b>2</b> = configuration and capability; <b>3</b> = kernel and Evaluate traces.<br>Level letters: E = 1, I = 2, D = 3. Filter by EXE name or pid for a single game.'
+        }
+      },
+      {
+        key: 'Directory',
+        label: { zh: '日志目录', en: 'Log directory' },
+        type: 'text', def: 'dlssg_sm86\\logs',
+        help: {
+          zh: '相对渲染 EXE 所在目录。默认 <code>dlssg_sm86\\logs</code>，日志文件名为 <code>dlssg_sm86.log</code>。',
+          en: 'Relative to the rendering EXE’s folder. Default <code>dlssg_sm86\\logs</code>; the log file is <code>dlssg_sm86.log</code>.'
+        }
+      }
+    ]
+  },
+  {
+    sec: 'Runtime',
+    title: { zh: '运行库来源', en: 'Runtime source' },
+    desc: {
+      zh: '正常使用保持 Bundled 即可。',
+      en: 'Keep Bundled for normal use.'
+    },
+    fields: [
+      {
+        key: 'Mode',
+        label: { zh: '运行库来源', en: 'Runtime source' },
+        type: 'select', def: 'Bundled',
+        options: [
+          ['Bundled', { zh: 'Bundled · 随包的 310.9.16（正常用这个）',
+                        en: 'Bundled · The packaged 310.9.16 (normal use)' }],
+          ['External', { zh: 'External · 外部运行库（进阶）', en: 'External · External runtime (advanced)' }],
+          ['Pinned', { zh: 'Pinned · 固定路径运行库（进阶）', en: 'Pinned · Pinned-path runtime (advanced)' }]
+        ],
+        help: {
+          zh: '<b>Bundled</b>（默认）= 随包的 <code>dlssg_sm86\\runtime\\nvngx_dlssg.dll</code> 及其后端，不需要匹配游戏 DLL 版本。<b>External / Pinned</b> 是进阶用法，见 <code>docs\\INSTALL.md</code>。<br>运行库用不了（随包的缺失、Path 指错文件）时帧生成关闭并记一条错误，<b>不会改用别的运行库</b>；预设布局本构建不认识的运行库会在安装时被拒绝，不论 [DLSSG] Preset 写什么。Auto 已于 0.4.0 删除（按 Bundled）。',
+          en: '<b>Bundled</b> (default) = the packaged <code>dlssg_sm86\\runtime\\nvngx_dlssg.dll</code> with its backend; no game DLL version matching needed. <b>External / Pinned</b> are advanced, see <code>docs\\INSTALL.md</code>.<br>A runtime that cannot be used (the packaged one missing, or a Path that names a wrong file) turns frame generation off with one error in the log; <b>nothing else is loaded in its place</b>. A runtime whose preset layout this build does not know is refused at install, whatever [DLSSG] Preset says. Auto was removed in 0.4.0 (it runs as Bundled).'
+        }
+      },
+      {
+        key: 'Path',
+        label: { zh: '运行库路径', en: 'Runtime path' },
+        type: 'text', def: '', omitWhenEmpty: true,
+        visible: () => state['Runtime.Mode'] !== 'Bundled',
+        help: {
+          zh: '仅当 Mode 为 <b>External / Pinned</b> 时使用，指向要加载的运行库文件（含文件名的完整路径）。留空则不写入该键。',
+          en: 'Used only when Mode is <b>External / Pinned</b>; the full path of the runtime file to load. Leave empty to omit the key.'
+        }
+      }
+    ]
+  },
+  {
+    sec: 'SuperResolution',
+    title: { zh: '超分辨率', en: 'Super Resolution' },
+    desc: {
+      zh: 'DLSS Super Resolution，仅 RTX 30 / RTX 20 有效。',
+      en: 'DLSS Super Resolution, RTX 30 / RTX 20 only.'
+    },
+    fields: [
+      {
+        key: 'Mode',
+        label: { zh: '超分预设', en: 'SR preset' },
+        type: 'select', def: 'Off',
+        options: [
+          ['Off', { zh: 'Off · 不介入（默认）', en: 'Off · Not touched (default)' }],
+          ['M-INT8', { zh: 'M-INT8 · 全部画质档用预设 M，跑本项目 INT8 内核',
+                       en: 'M-INT8 · Preset M on every quality mode, this project’s INT8 kernels' }],
+          ['L-INT8', { zh: 'L-INT8 · 全部画质档用预设 L，跑本项目 INT8 内核',
+                       en: 'L-INT8 · Preset L on every quality mode, this project’s INT8 kernels' }],
+          ['M-FP16', { zh: 'M-FP16 · 预设 M，跑 NVIDIA 自己的内核',
+                       en: 'M-FP16 · Preset M on NVIDIA’s own kernels' }],
+          ['L-FP16', { zh: 'L-FP16 · 预设 L，跑 NVIDIA 自己的内核',
+                       en: 'L-FP16 · Preset L on NVIDIA’s own kernels' }]
+        ],
+        help: {
+          zh: '<b>Off</b>（默认）= 不介入。<br><b>M-INT8 / L-INT8</b> = 所有画质档都用预设 M / L（具体档位仍在游戏里选），跑本项目的 INT8 内核；<b>M-FP16 / L-FP16</b> = 同一预设，但跑 NVIDIA 自己的内核。<br>注意：在 Quality / Balanced / DLAA 档上，M 或 L 比游戏自己用的预设 K <b>更慢</b>。',
+          en: '<b>Off</b> (default) = not touched.<br><b>M-INT8 / L-INT8</b> = preset M / L on every quality mode (the game’s menu still picks the mode), run on this project’s INT8 kernels; <b>M-FP16 / L-FP16</b> = the same preset on NVIDIA’s own kernels.<br>Note: on Quality / Balanced / DLAA, M or L is <b>slower</b> than the game’s own preset K.'
+        }
+      }
+    ]
+  }
+];
+
+/* =========================================================================
+   状态与解析
+   ========================================================================= */
+const DEFAULT_INI = document.getElementById('defaultIni').textContent;
+
+let state = {};
+let sourceLines = [];
+let originalText = '';
+let baseName = 'dlssg_sm86.ini';
+
+function parseIni(text) {
+  const lines = text.replace(/\r\n?/g, '\n').split('\n');
+  const values = {}, present = {};
+  let cur = null;
+  lines.forEach((line, i) => {
+    const t = line.trim();
+    if (!t || t[0] === ';' || t[0] === '#') return;
+    const m = t.match(/^\[([^\]]+)\]$/);
+    if (m) { cur = m[1].trim(); return; }
+    const eq = line.indexOf('=');
+    if (eq < 0 || cur === null) return;
+    const id = cur + '.' + line.slice(0, eq).trim();
+    values[id] = line.slice(eq + 1).trim();
+    present[id] = i;
+  });
+  return { lines, values, present };
+}
+
+function insertKey(lines, sec, key, val) {
+  let header = -1, cur = null;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (t.startsWith('[') && t.endsWith(']')) {
+      cur = t.slice(1, -1).trim();
+      if (cur === sec) header = i;
+    }
+  }
+  if (header === -1) {
+    if (lines.length && lines[lines.length - 1].trim() !== '') lines.push('');
+    lines.push('[' + sec + ']', key + '=' + val);
+    return;
+  }
+  let end = lines.length;
+  for (let i = header + 1; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (t.startsWith('[') && t.endsWith(']')) { end = i; break; }
+  }
+  let at = end;
+  while (at > header + 1 && lines[at - 1].trim() === '') at--;
+  lines.splice(at, 0, key + '=' + val);
+}
+
+function buildIni() {
+  const lines = sourceLines.slice();
+
+  const present = {};
+  let cur = null;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (!t || t[0] === ';' || t[0] === '#') continue;
+    const m = t.match(/^\[([^\]]+)\]$/);
+    if (m) { cur = m[1].trim(); continue; }
+    const eq = lines[i].indexOf('=');
+    if (eq < 0 || cur === null) continue;
+    present[cur + '.' + lines[i].slice(0, eq).trim()] = i;
+  }
+
+  const adds = [];
+  for (const s of SECTIONS) {
+    for (const f of s.fields) {
+      const id = s.sec + '.' + f.key;
+      const val = state[id];
+      if (val === undefined) continue;
+
+      if (present[id] !== undefined) {
+        const i = present[id], line = lines[i];
+        const eq = line.indexOf('=');
+        const ws = line.slice(eq + 1).match(/^[ \t]*/)[0];
+        lines[i] = line.slice(0, eq + 1) + ws + val;
+      } else {
+        if (f.omitWhenEmpty && val === '') continue;
+        if (f.visible && !f.visible()) continue;
+        if (val === f.def) continue;
+        adds.push({ sec: s.sec, key: f.key, val });
+      }
+    }
+  }
+
+  for (const a of adds) insertKey(lines, a.sec, a.key, a.val);
+
+  while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
+  return lines.join('\n') + '\n';
+}
+
+/* =========================================================================
+   渲染
+   ========================================================================= */
+function render() {
+  const root = document.getElementById('controls');
+  root.innerHTML = '';
+
+  for (const s of SECTIONS) {
+    const card = document.createElement('section');
+    card.className = 'card glass';
+    card.dataset.sec = s.sec;
+
+    const head = document.createElement('div');
+    head.className = 'card-head';
+    head.innerHTML =
+      `<h2><span class="sec-name">[${s.sec}]</span>${L(s.title)}` +
+      `<span class="badge-off">${L(T.lblNoSec)}</span></h2>` +
+      (s.desc ? `<p class="card-desc">${L(s.desc)}</p>` : '');
+    card.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'fields';
+    for (const f of s.fields) body.appendChild(renderField(s, f));
+    card.appendChild(body);
+    root.appendChild(card);
+  }
+}
+
+function renderField(sec, f) {
+  const id = sec.sec + '.' + f.key;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'field';
+  wrap.dataset.id = id;
+
+  const head = document.createElement('div');
+  head.className = 'field-head';
+  head.innerHTML =
+    `<label for="f-${id}">${L(f.label)}<code>${f.key}</code></label>` +
+    `<span class="def">${L(T.lblDefault)} ${f.def === '' ? '—' : f.def}</span>`;
+  wrap.appendChild(head);
+
+  let ctl;
+  if (f.type === 'select') {
+    ctl = document.createElement('select');
+    ctl.className = 'ctl';
+    ctl.id = 'f-' + id;
+    let hasVal = false;
+    for (const [v, t] of f.options) {
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = L(t);
+      ctl.appendChild(o);
+      if (v === state[id]) hasVal = true;
+    }
+    if (!hasVal && state[id] !== undefined) {
+      const o = document.createElement('option');
+      o.value = state[id];
+      o.textContent = state[id] + ' ' + L(T.lblCurrent);
+      ctl.appendChild(o);
+    }
+    ctl.value = state[id];
+    ctl.addEventListener('change', () => { state[id] = ctl.value; refresh(); });
+  } else {
+    ctl = document.createElement('input');
+    ctl.type = 'text';
+    ctl.className = 'ctl';
+    ctl.id = 'f-' + id;
+    ctl.spellcheck = false;
+    ctl.value = state[id] ?? '';
+    ctl.addEventListener('input', () => { state[id] = ctl.value; refresh(); });
+  }
+  wrap.appendChild(ctl);
+
+  if (f.help) {
+    const p = document.createElement('p');
+    p.className = 'help';
+    p.innerHTML = L(f.help);
+    wrap.appendChild(p);
+  }
+  return wrap;
+}
+
+/* =========================================================================
+   动态状态
+   ========================================================================= */
+function updateDynamic() {
+  const eng = state['FrameGeneration.Engine'];
+  document.querySelectorAll('.card[data-sec]').forEach(el => {
+    const sec = el.dataset.sec;
+    let muted = false;
+    if (sec === 'DLSSG' && eng !== 'DLSS') muted = true;
+    if (sec === 'XeSSFG' && eng !== 'XeSS') muted = true;
+    el.classList.toggle('muted', muted);
+  });
+
+  const pathField = document.querySelector('.field[data-id="Runtime.Path"]');
+  if (pathField) pathField.hidden = (state['Runtime.Mode'] === 'Bundled');
+}
+
+/* =========================================================================
+   校验
+   ========================================================================= */
+function updateValidation() {
+  const box = document.getElementById('validation');
+  const items = [];
+
+  const eng = state['FrameGeneration.Engine'];
+  const mgfStr = String(state['FrameGeneration.MaxGeneratedFrames'] ?? '');
+  const mgf = /^\d+$/.test(mgfStr) ? parseInt(mgfStr, 10) : NaN;
+
+  if (!Number.isInteger(mgf) || mgf < 1 || mgf > 5) {
+    items.push(['err', L({
+      zh: `<b>MaxGeneratedFrames = ${mgfStr || '(空)'}</b> 无效：必须是 1–5 的整数。<br>值写错或越界<b>不会被换成默认值</b>——日志记一条 <code>configuration_invalid</code>，帧生成不启用。`,
+      en: `<b>MaxGeneratedFrames = ${mgfStr || '(empty)'}</b> is invalid: it must be an integer from 1 to 5.<br>An invalid or out-of-range value is <b>never replaced by a default</b> — the log gets one <code>configuration_invalid</code> and frame generation is not enabled.`
+    })]);
+  } else if (eng === 'XeSS' && mgf > 3) {
+    items.push(['err', L({
+      zh: `Engine=XeSS 只支持 <b>2X / 3X / 4X</b>（MaxGeneratedFrames 1–3），当前为 ${mgf}：帧生成不会启用，日志会记 <code>max_generated_frames_unsupported</code>。`,
+      en: `Engine=XeSS supports <b>2X / 3X / 4X</b> (MaxGeneratedFrames 1–3) only; currently ${mgf}. Frame generation will not be enabled and the log will record <code>max_generated_frames_unsupported</code>.`
+    })]);
+  } else if (eng === 'DLSS' && mgf === 5) {
+    items.push(['info', L({
+      zh: '6X 是随包运行库 310.9.16 支持的上限。',
+      en: '6X is the most the bundled runtime 310.9.16 supports.'
+    })]);
+  }
+
+  const legacyModel = sourceLines.some(l => /^\s*Model\s*=/i.test(l));
+  if (legacyModel) {
+    items.push(['warn', L({
+      zh: '文件里还有 <code>Model=</code> 键：该键已于 2026-10-26 删除、不再读取，建议手动删掉（工具只修改已知键，不会自动删除它）。',
+      en: 'The file still contains a <code>Model=</code> key: it was removed on 2026-10-26 and is no longer read; delete it manually (this tool only edits known keys and will not remove it).'
+    })]);
+  }
+
+  if (state['Runtime.Mode'] !== 'Bundled' && !state['Runtime.Path']) {
+    items.push(['warn', L({
+      zh: 'Runtime.Mode 不是 Bundled，但 Path 为空：运行库无法使用时会关闭帧生成并记一条错误。',
+      en: 'Runtime.Mode is not Bundled but Path is empty: the runtime will be unusable, frame generation will be turned off and one error logged.'
+    })]);
+  }
+
+  if (state['General.Enabled'] !== '1') {
+    items.push(['info', L({
+      zh: 'Enabled=0：帧生成关闭，RTX 30 / 20 上不会插帧（游戏自带 DLSS-G 原样加载）。',
+      en: 'Enabled=0: frame generation is off — no frame generation on RTX 30 / 20 (the game’s own DLSS-G loads unchanged).'
+    })]);
+  }
+  if (state['SuperResolution.Mode'] !== 'Off') {
+    items.push(['info', L({
+      zh: '超分仅对 RTX 30 / 20 生效；在 Quality / Balanced / DLAA 档上，M / L 预设比游戏自己的 K 更慢。',
+      en: 'Super resolution applies to RTX 30 / 20 only; on Quality / Balanced / DLAA, presets M / L are slower than the game’s own K.'
+    })]);
+  }
+  if (state['Logging.Level'] === '3') {
+    items.push(['info', L({
+      zh: '日志级别 3 会记录内核与 Evaluate 追踪，日志文件增长较快。',
+      en: 'Log level 3 records kernel and Evaluate traces; the log file grows quickly.'
+    })]);
+  }
+
+  box.innerHTML = items.length
+    ? items.map(([lv, t]) =>
+        `<div class="msg ${lv}"><span class="dot"></span><div>${t}</div></div>`).join('')
+    : `<div class="msg ok"><span class="dot"></span><div>${
+        L({ zh: '未发现配置问题。', en: 'No configuration issues found.' })
+      }</div></div>`;
+}
+
+/* =========================================================================
+   刷新
+   ========================================================================= */
+function refresh() {
+  const ini = buildIni();
+  document.getElementById('preview').textContent = ini;
+  document.getElementById('stat').textContent =
+    '· ' + ini.split('\n').length + L(T.lblLines);
+  updateDynamic();
+  updateValidation();
+}
+
+/* =========================================================================
+   静态文案 / 语言按钮
+   ========================================================================= */
+function applyStatic() {
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (T[k]) el.innerHTML = L(T[k]);
+  });
+  document.getElementById('btnLangZh').classList.toggle('active', LANG === 'zh');
+  document.getElementById('btnLangEn').classList.toggle('active', LANG === 'en');
+  const hidden = document.body.classList.contains('hide-help');
+  document.getElementById('btnHelp').innerHTML = L(hidden ? T.btnHelpShow : T.btnHelp);
+}
+
+function setLang(l) {
+  if (l === LANG) return;
+  LANG = l;
+  localStorage.setItem('dlssg_lang', l);
+  applyStatic();
+  render();
+  refresh();
+}
+
+/* =========================================================================
+   载入 / 导出
+   ========================================================================= */
+function applyText(text, name) {
+  originalText = text.replace(/\r\n?/g, '\n');
+  if (name) baseName = name;
+  const p = parseIni(originalText);
+  sourceLines = p.lines;
+
+  state = {};
+  for (const s of SECTIONS) {
+    for (const f of s.fields) {
+      const id = s.sec + '.' + f.key;
+      state[id] = (p.values[id] !== undefined) ? p.values[id] : f.def;
+    }
+  }
+  document.getElementById('fileName').textContent = baseName;
+  render();
+  refresh();
+}
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    applyText(String(reader.result), file.name);
+    showToast(L(T.toastLoaded) + file.name);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 1900);
+}
+
+function download() {
+  const text = document.getElementById('preview').textContent;
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = baseName || 'dlssg_sm86.ini';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  showToast(L(T.toastDown) + a.download);
+}
+
+async function copyIni() {
+  const text = document.getElementById('preview').textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(L(T.toastCopy));
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    showToast(L(T.toastCopy));
+  }
+}
+
+/* =========================================================================
+   事件绑定
+   ========================================================================= */
+document.getElementById('btnOpen').addEventListener('click', () =>
+  document.getElementById('fileInput').click());
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) readFile(f);
+  e.target.value = '';
+});
+
+document.getElementById('btnDownload').addEventListener('click', download);
+document.getElementById('btnCopy').addEventListener('click', copyIni);
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  applyText(originalText, baseName);
+  showToast(L(T.toastReset));
+});
+
+document.getElementById('btnHelp').addEventListener('click', () => {
+  document.body.classList.toggle('hide-help');
+  const hidden = document.body.classList.contains('hide-help');
+  document.getElementById('btnHelp').innerHTML = L(hidden ? T.btnHelpShow : T.btnHelp);
+});
+
+document.getElementById('btnLangZh').addEventListener('click', () => setLang('zh'));
+document.getElementById('btnLangEn').addEventListener('click', () => setLang('en'));
+
+/* 拖放载入 */
+let dragDepth = 0;
+document.addEventListener('dragenter', e => {
+  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+    dragDepth++; document.body.classList.add('dragging');
+  }
+});
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('dragleave', () => {
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) document.body.classList.remove('dragging');
+});
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  dragDepth = 0;
+  document.body.classList.remove('dragging');
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) readFile(f);
+});
+
+/* 启动 */
+applyStatic();
+applyText(DEFAULT_INI, 'dlssg_sm86.ini');
+</script>
+</body>
+</html>
