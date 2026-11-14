@@ -548,9 +548,10 @@ model 18 图的着色器（61 个 DXBC）与权重（96 个缓冲 / 纹理）在
 
 **只有 CUDA 运行器（2026-10-22，业主"xess那个默认cuda 其他d3d12实现均移除"，C103）**：`[XeSSFG] Runner` 删除（2026-10-26 起不读，C113），`Config::cudaRunner`、纯 D3D12 运行器的分支（全图 DXIL、`ClearUnorderedAccessViewUint` 清零、单个描述符堆）与
 `xefg_cuda_unavailable` 一起删除；CUDA 镜像是包的一部分（缺 / 不符 = `xefg_unavailable`），引擎只在 `xe_cuda.inc` 在时编译。留下的 D3D12
-是 CUDA 运行器自己的逐派发路由（`Exec::dxilDispatch`）：model 18 的 `kXeD3dRoutes`（D2、D10、D22、D23、D24 两种列表，D25 只有变体
-`cs_0E500914F10BB805`，D38 只在 COMPUTE 上——DIRECT 上它与 D37 融合）与 model 15 包里没有镜像的着色器（D03、D13–D17、D27、D29、D31），都是实测比
-CUDA 翻译快才这样路由的。
+是 CUDA 运行器自己的逐派发路由（`Exec::dxilDispatch`）：model 18 的 `kXeD3dRoutes`（D2、D10、D22、D23 两种列表，D25 只有变体
+`cs_0E500914F10BB805`，D38 只在 COMPUTE 上——DIRECT 上它与 D37 融合）与 model 15 包里没有镜像的着色器（D03、D13–D17、D27、D31），都是实测比
+CUDA 翻译快才这样路由的。MV 散射（model 18 的 D24、model 15 的 D29）2026-10-28 起跑本项目自己的散射内核（瓦片跟着线程块的平均目标走，C135），
+只在 RTX 50 上仍是 DXIL（`kBlackwellDxil`）；散射缓冲（I194、I220、I221）的清零只覆盖散射能写到的前缀（C136）。
 
 **不退化（C94，2026-10-17 起取代原来的 `xefg_fallback`）**：XeSS 接受的特性从不交给 NVIDIA 的 Evaluate。包缺失或损坏（含 CUDA 镜像）在安装时记错误级 `xefg_unavailable`，`fgGate::refuseFrameGeneration`，之后的帧生成 CreateFeature 答
 `0xbad00001`。CreateFeature 时能判定的由 fg_gate 的创建否决（`fgGate::vetoFgCreate`，特性 11，在核心创建之前）判：声明的
@@ -624,7 +625,7 @@ Datafile、Image resource 和 DONT_RESOLVE_DLL_REFERENCES 请求保持其加载�
 
 `External`（COMPAT C42）是"运行库放在代理外面"这一档，`[Runtime] Path` / `SRPath` 各管一个特性：绝对路径，或**相对代理 DLL 自己的目录**（进程工作目录被 Steam / 快捷方式 / 引擎自己的 `chdir()` 决定，不可靠），先做 `%VARIABLE%` 展开。文件的 SHA-256 必须是这个构建的后端服务的那一个，否则记 `external_runtime_rejected`、拒绝这次加载（2026-10-20 起，C99）。2026-09-29 起 `Bundled` 也只是一个随包文件的路径，原来"生效时不释放内嵌运行库"这句已没有对象；`Bundled` 找不到或哈希不符时记一条 `bundled_runtime_unavailable` 并拒绝这次加载（C99；此前交回游戏，C43）。`runtime_redirect.selected_source` / `sr_runtime_redirect.selected_source` 是四档的统一写法（`bundled`/`external`/`pinned`/`game_own`），与只说"请求从哪儿来"的 `source` 是两件事。
 
-GPU 架构选择、能力上报和生成帧标记由后端负责。**镜像族只有一个决定函数**：`kernelFamily::choose(sm)`（`src/common/kernel_selection.h`，2026-10-24，C109）——SM 7.5 → sm_75 cubin，SM 8.6 → sm_86 cubin，其它 SM → PTX（帧生成用 sm_86 族的 PTX）；帧生成（`targetSMFor` / `selectKernelImage`，SM 来自 `detectGPU`，`DLSSG_FAKE_HOST_SM` 之后）、XeSS-FG（安装时由后端把同一个 SM 交给 `xefg::install`，model 15 与它 2X 用的 model 18 图都经 `xefgImages::createAll`）与超分（`applyDevice` 按渲染设备的 LUID 定一次，`srOptions::cubinFirst`）都只问它，不试探；决定记在 `install.kernel_family`、`sr_device.family`、`xefg_cuda.{sm,family,why}`。`[Compatibility] KernelImage=Auto` 在 `choose` 给出所选内核族的 cubin 时选择 cubin，否则使用 PTX；`PTX` 总是 PTX；`Cubin` 要求物理架构与内核族完全一致；`Original` 装全部架构/能力/Evaluate 钩子但不替换任何内核（也不启用优化变体、合并与图像补丁），用来在同一台机器上取运行库自己的数值作参考。路由未启用时同样使用原内核，两种情况日志 image 都是 original，靠 `kernel_image_requested` 区分。选择函数在读取资源和安装钩子前检查不兼容配置（`Original` 与显式 `PTX`/`Cubin` 互斥）。
+GPU 架构选择、能力上报和生成帧标记由后端负责。**镜像族只有一个决定函数**：`kernelFamily::choose(sm)`（`src/common/kernel_selection.h`，2026-10-24，C109）——SM 7.5 → sm_75 cubin，SM 8.6 → sm_86 cubin，其它 SM → PTX（帧生成用 sm_86 族的 PTX）；帧生成（`targetSMFor` / `selectKernelImage`，SM 来自 `detectGPU`，`DLSSG_FAKE_HOST_SM` 之后）、XeSS-FG（安装时由后端把同一个 SM 交给 `xefg::install`，model 15 与它 2X 用的 model 18 图都经 `xefgImages::createAll`）与超分（`applyDevice` 按渲染设备的 LUID 定一次，`srOptions::cubinFirst`）都只问它，不试探；决定记在 `install.kernel_family`、`sr_device.family`、`xefg_cuda.{sm,family,why}`。XeSS-FG 在 PTX 族里还有一层固定的区分（C133）：SM ≥ 10.0（RTX 50）时，包里有 `<内核>.bw`（INT8 张量核心内核的 compute_86 PTX 镜像，共享的 `.ptx` 是 compute_75，只有 Turing 的 MMA 形状）的 26 个内核从它创建，其余仍是 `.ptx`；按包的镜像表定、不试探，`xefg_cuda.blackwell_images` 记数量。`[Compatibility] KernelImage=Auto` 在 `choose` 给出所选内核族的 cubin 时选择 cubin，否则使用 PTX；`PTX` 总是 PTX；`Cubin` 要求物理架构与内核族完全一致；`Original` 装全部架构/能力/Evaluate 钩子但不替换任何内核（也不启用优化变体、合并与图像补丁），用来在同一台机器上取运行库自己的数值作参考。路由未启用时同样使用原内核，两种情况日志 image 都是 original，靠 `kernel_image_requested` 区分。选择函数在读取资源和安装钩子前检查不兼容配置（`Original` 与显式 `PTX`/`Cubin` 互斥）。
 
 **一个镜像、一个驱动下限**（2026-10-26，C127，取代 C103 的 cubin → PTX 重试）：全部 cubin 由 CUDA 13.0.2 的 `ptxas` 生成（ELF ABI 8），驱动下限 R580（CUDA 13.0）在后端安装时用 `cuDriverGetVersion` 查一次（`src/backend/diag/cuda_driver.h` + `driverFloor`），低于它一条 `driver_below_floor`、帧生成 / XeSS-FG 什么都不装，超分 INT8 特性被拒。下限以上，`kernelFamily::choose` 选中的那一个镜像被驱动拒绝就是该模块的错误（`fg_kernel_fatal` / `sr_kernel_fatal{kind:"kernel"}` / `xefg_feature_refused`），不换镜像重试。**游戏内不再编译**（C128）：我们镜像建出的 CU 模块与函数按（设备、资源）留到进程结束，运行库的 `DestroyCuModule` / `DestroyCuFunction` 对它们只答成功；PTX 一族的卡上 `jitCache` 在安装时把要用的 PTX 编成 cubin 并跨进程缓存。
 

@@ -132,7 +132,7 @@ footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--lin
   <div class="eyebrow">Installation manual · step by step, written for a first install</div>
   <h1>DLSSG Installation Manual</h1>
   <p class="lede">This project lets RTX 20 / 30 graphics cards use DLSS Frame Generation, and on RTX 40 / 50 it uses this project's frame-generation kernels by default; on RTX 30 / 20 you can also turn on this project's INT8 Super Resolution kernels. Follow the steps below one at a time: each step says where to go and what to click.</p>
-  <div class="build"><span><a href="MANUAL.html" lang="zh-CN">中文</a> · <b>English</b></span><span>For the DLSSG 0.4.1 release package</span><span>Every setting in full: <code>docs\INSTALL.en.md</code></span></div>
+  <div class="build"><span><a href="MANUAL.html" lang="zh-CN">中文</a> · <b>English</b></span><span>For the DLSSG 0.4.2 release package</span><span>Every setting in full: <code>docs\INSTALL.en.md</code></span></div>
 </header>
 
 <section class="box stop" aria-label="Read these three first">
@@ -302,7 +302,7 @@ footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--lin
       <tr><td><code>Optimized</code></td><td><code>[DLSSG]</code></td><td><code>1</code></td><td>Frame generation's acceleration level. Factory <code>1</code>: the picture is exactly the same as with no acceleration at all (bit-identical to the official one); <code>2</code> is a little faster (about 1–3 % per generated frame) and no longer bit-identical, with no visible difference side by side; <code>0</code> means no acceleration at all. Settings files from older versions have it under <code>[FrameGeneration]</code>; that place is no longer read (a non-default value there such as <code>1</code> leaves frame generation off), so use the new settings file.</td></tr>
       <tr><td><code>MaxGeneratedFrames</code></td><td><code>[FrameGeneration]</code></td><td><code>3</code> (up to 4X)</td><td>Change to <code>5</code> for 6X (see 6.1).</td></tr>
       <tr><td><code>Preset</code></td><td><code>[DLSSG]</code></td><td><code>A</code></td><td>What is written here runs; the game or driver settings cannot change it. Factory <code>A</code>; an old settings file's <code>Auto</code> runs as <code>A</code>. <code>C</code> = FG Lite: roughly a third to a half less GPU time per generated frame, slightly lower image quality (mostly on the HUD and at object edges). Also runs this project's accelerated kernels, whatever DLSS-G version the game ships. <code>B</code> (UI recomposition forced on) only works when the game provides both a HUD-less image and a UI plane, which most games do not; the log then has one <code>preset_ineffective</code> record.</td></tr>
-      <tr><td><code>Engine</code></td><td><code>[FrameGeneration]</code></td><td><code>DLSS</code></td><td><code>XeSS</code> = generate frames with Intel's XeSS-FG model (Intel's model 15, 2X / 3X / 4X). On RTX 30 it is faster than the default DLSS at 1440p and below and about 30 % slower from 4K up (offline GPU time), and it uses about 0.4-0.5 GB more video memory; when the game's back buffer is RGBA16F (some HDR output) frame generation is off, it does not switch to DLSS. See 6.4.</td></tr>
+      <tr><td><code>Engine</code></td><td><code>[FrameGeneration]</code></td><td><code>DLSS</code></td><td><code>XeSS</code> = generate frames with Intel's XeSS-FG model (Intel's model 15, 2X / 3X / 4X). On RTX 30 it is slower than the default DLSS (about 3 ms more per generated frame at 4K) and uses about 0.4-0.5 GB more video memory; when the game's back buffer is RGBA16F (some HDR output) frame generation is off, it does not switch to DLSS. See 6.4.</td></tr>
       <tr><td><code>Mode</code></td><td><code>[SuperResolution]</code></td><td><code>Off</code></td><td>Change to <code>M-INT8</code> or <code>L-INT8</code> on RTX 30 / 20 to use INT8 super resolution (see 6.2).</td></tr>
       <tr><td><code>Level</code></td><td><code>[Logging]</code></td><td><code>1</code> (errors only)</td><td>Change to <code>2</code> to check the install or to report a problem.</td></tr>
       <tr><td><code>FrameTiming</code></td><td><code>[Logging]</code></td><td>not present (off)</td><td>Add <code>FrameTiming=1</code> to record what every frame costs (frame interval, GPU time of super resolution and of frame generation); the logs folder gets one plain-text file, <code>frame_timing.txt</code> (one section appended per game launch).</td></tr>
@@ -310,7 +310,7 @@ footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--lin
   </table></div>
   <p>No other setting is in the factory file and they are rarely needed; all of them are described in <code>docs\INSTALL.en.md</code> (opens in Notepad).</p>
   <h3>6.4 XeSS frame generation (optional) <span class="chip all">All RTX cards</span></h3>
-  <p>Following <a href="#ini">how to edit the settings file</a>, change <code>Engine=DLSS</code> under <code>[FrameGeneration]</code> to <code>Engine=XeSS</code>; nothing else needs changing: XeSS-FG (Intel's model 15) does 2X / 3X / 4X and the factory <code>MaxGeneratedFrames=3</code> (4X) works as is. Turn on DLSS frame generation in the game as usual and pick the multiplier you want. The <code>[XeSSFG]</code> section has two more settings: <code>FlowResolution</code> (<code>Coarse</code> / <code>Middle</code> / <code>Fine</code>, factory <code>Middle</code>; finer is slower; <code>CoarseAt4K</code> switches to <code>Coarse</code> automatically at 4K output and above) and <code>UseHudless</code> (factory <code>Auto</code>: use the game's HUD-less image when it provides one, otherwise not; <code>1</code> requires it always, and a game that does not provide one ends with an error; <code>0</code> never uses it). The <code>[DLSSG]</code> settings do nothing under XeSS.</p>
+  <p>Following <a href="#ini">how to edit the settings file</a>, change <code>Engine=DLSS</code> under <code>[FrameGeneration]</code> to <code>Engine=XeSS</code>; nothing else needs changing: XeSS-FG (Intel's model 15) does 2X / 3X / 4X and the factory <code>MaxGeneratedFrames=3</code> (4X) works as is. Turn on DLSS frame generation in the game as usual and pick the multiplier you want. The <code>[XeSSFG]</code> section has two more settings: <code>FlowResolution</code> (<code>Coarse</code> / <code>Middle</code> / <code>Fine</code>, factory <code>Middle</code>; finer is slower) and <code>UseHudless</code> (factory <code>Auto</code> = <code>0</code>: the whole image, UI included, is interpolated, whether the game provides a HUD-less image or not; <code>1</code> requires it always, and a game that does not provide one ends with an error; <code>0</code> is the same as <code>Auto</code>). The <code>[DLSSG]</code> settings do nothing under XeSS.</p>
   <p>When the game's back buffer is RGBA16F (some HDR output uses it), XeSS refuses frame generation (FG off) with one error-level <code>xefg_feature_refused</code> record; a problem found only while running, such as a missing input XeSS needs, is one error-level <code>xefg_kernel_fatal</code> record naming the cause, and the game then exits. What XeSS cannot run never falls back to DLSS frame generation.</p>
   <p>XeSS-FG runs Intel's model 15 as ported by MFG-Unlocker 1.6.0, shipped in the package (inside <code>dlssg_sm86\xefg\xefg_kernels.dll</code>); its 2X is Intel's model 18 graph (bit-identical to the former <code>Model=18</code>), so since 2026-10-26 there is one model and the <code>[XeSSFG] Model</code> line is gone: a line left in an old file is not read. On an RTX 3070 at 4X it is faster than the default DLSS at 1440p and about 30 % slower at 4K (offline GPU time, not frame rate). 46 of its programs are derived from Intel's and fall under Intel's XeSS SDK terms, see <code>THIRD_PARTY_NOTICES.txt</code>.</p>
 
@@ -327,7 +327,7 @@ footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--lin
   </ol>
   <div class="copy-wrap">
     <div class="copy-row"><button class="copy" type="button" id="copy-report">Copy this</button><span class="copy-state" id="copy-state" role="status"></span></div>
-    <div class="scroll"><pre id="report-template">Version: 0.4.1
+    <div class="scroll"><pre id="report-template">Version: 0.4.2
 DLL in use (version.dll, or which one you switched to):
 GPU model:
 Driver version:
@@ -436,7 +436,7 @@ The problem (in which scene, how it happens):</pre></div>
 </section>
 
 <footer>
-  DLSSG 0.4.1 installation manual · Every setting in full: <code>docs\INSTALL.en.md</code> · Release notes: <code>README.en.md</code> · License: <code>LICENSE.md</code>, <code>THIRD_PARTY_NOTICES.txt</code>
+  DLSSG 0.4.2 installation manual · Every setting in full: <code>docs\INSTALL.en.md</code> · Release notes: <code>README.en.md</code> · License: <code>LICENSE.md</code>, <code>THIRD_PARTY_NOTICES.txt</code>
 </footer>
 
 </div>

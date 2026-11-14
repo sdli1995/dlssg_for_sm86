@@ -132,7 +132,7 @@ footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--lin
   <div class="eyebrow">安装手册 · 第一次用也能照着做</div>
   <h1>DLSSG 安装手册</h1>
   <p class="lede">本项目让 RTX 20 / 30 显卡也能开 DLSS 帧生成，RTX 40 / 50 默认换用本项目的帧生成内核；RTX 30 / 20 还可以打开本项目的 INT8 超分内核。照着下面的步骤一步一步做就行，每一步都写了去哪里点、点什么。</p>
-  <div class="build"><span><b>中文</b> · <a href="MANUAL.en.html" lang="en">English</a></span><span>适用于 DLSSG 0.4.1 发布包</span><span>全部设置的完整说明：<code>docs\INSTALL.md</code></span></div>
+  <div class="build"><span><b>中文</b> · <a href="MANUAL.en.html" lang="en">English</a></span><span>适用于 DLSSG 0.4.2 发布包</span><span>全部设置的完整说明：<code>docs\INSTALL.md</code></span></div>
 </header>
 
 <section class="box stop" aria-label="先看这三条">
@@ -302,7 +302,7 @@ footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--lin
       <tr><td><code>Optimized</code></td><td><code>[DLSSG]</code></td><td><code>1</code></td><td>帧生成的加速档位。出厂 <code>1</code>：画面和不做任何加速时完全相同（与官方逐位一致）；<code>2</code> 再快一点（每生成帧约 1–3 %），画面不再逐位一致，并排看不出差别；<code>0</code> 是不做任何加速。旧版本的设置文件把它写在 <code>[FrameGeneration]</code> 下面，那个位置不再读取（写了 <code>1</code> 等非默认值时插帧不启用），请用新的设置文件。</td></tr>
       <tr><td><code>MaxGeneratedFrames</code></td><td><code>[FrameGeneration]</code></td><td><code>3</code>（最多 4X）</td><td>要 6X 时改成 <code>5</code>（见 6.1）。</td></tr>
       <tr><td><code>Preset</code></td><td><code>[DLSSG]</code></td><td><code>A</code></td><td>这里写什么就跑什么，游戏或驱动设置改不了它。出厂 <code>A</code>；旧设置文件里的 <code>Auto</code> 按 <code>A</code> 跑。改成 <code>C</code> = 轻量帧生成（FG Lite）：每个生成帧的 GPU 时间约少三成到一半，画质略低（主要在 HUD 和物体边缘）。同样用本项目的加速内核，游戏自带哪个版本的 DLSS-G 都能用。<code>B</code>（强制 UI 重组）只在游戏同时提供无 HUD 画面和 UI 平面时才有效，多数游戏不提供，这时日志里有一条 <code>preset_ineffective</code>。</td></tr>
-      <tr><td><code>Engine</code></td><td><code>[FrameGeneration]</code></td><td><code>DLSS</code></td><td>改成 <code>XeSS</code> = 用 Intel XeSS-FG 的模型生成插帧（Intel model 15，2X / 3X / 4X）。在 RTX 30 上 1440p 及以下比默认的 DLSS 快、4K 起慢约三成（离线 GPU 时间），也多占约 0.4–0.5 GB 显存；游戏后缓冲是 RGBA16F（部分 HDR 输出）时插帧关，不会改用 DLSS。见 6.4。</td></tr>
+      <tr><td><code>Engine</code></td><td><code>[FrameGeneration]</code></td><td><code>DLSS</code></td><td>改成 <code>XeSS</code> = 用 Intel XeSS-FG 的模型生成插帧（Intel model 15，2X / 3X / 4X）。在 RTX 30 上它比默认的 DLSS 慢（4K 每生成帧多约 3 ms），也多占约 0.4–0.5 GB 显存；游戏后缓冲是 RGBA16F（部分 HDR 输出）时插帧关，不会改用 DLSS。见 6.4。</td></tr>
       <tr><td><code>Mode</code></td><td><code>[SuperResolution]</code></td><td><code>Off</code></td><td>RTX 30 / 20 想用 INT8 超分时改成 <code>M-INT8</code> 或 <code>L-INT8</code>（见 6.2）。</td></tr>
       <tr><td><code>Level</code></td><td><code>[Logging]</code></td><td><code>1</code>（只记错误）</td><td>确认安装、反馈问题时改成 <code>2</code>。</td></tr>
       <tr><td><code>FrameTiming</code></td><td><code>[Logging]</code></td><td>不写（关）</td><td>想记录每一帧的耗时（帧间隔、超分和帧生成各花了多少 GPU 时间）时加一行 <code>FrameTiming=1</code>，日志文件夹里会多一个普通文本文件 <code>frame_timing.txt</code>（每次启动游戏追加一段）。</td></tr>
@@ -310,7 +310,7 @@ footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--lin
   </table></div>
   <p>其它设置都不在出厂文件里，一般用不到，完整说明见 <code>docs\INSTALL.md</code>（可以用记事本打开）。</p>
   <h3>6.4 XeSS 帧生成（可选） <span class="chip all">所有 RTX 显卡</span></h3>
-  <p>按<a href="#ini">怎么改设置文件</a>，把 <code>[FrameGeneration]</code> 下面的 <code>Engine=DLSS</code> 改成 <code>Engine=XeSS</code>，其它不用改：XeSS-FG（Intel model 15）做 2X / 3X / 4X，出厂的 <code>MaxGeneratedFrames=3</code>（4X）直接可用。游戏里照常打开 DLSS 帧生成，选想要的倍率。<code>[XeSSFG]</code> 一节另有两项：<code>FlowResolution</code>（<code>Coarse</code> / <code>Middle</code> / <code>Fine</code>，出厂 <code>Middle</code>，越细越慢；另有 <code>CoarseAt4K</code>，输出 ≥ 4K 时自动用 <code>Coarse</code>）和 <code>UseHudless</code>（出厂 <code>Auto</code>：游戏提供无 HUD 画面时用它，没有就不用；改成 <code>1</code> 是一律要求，游戏没提供时会报错退出；<code>0</code> 是不用）。<code>[DLSSG]</code> 一节的设置在 XeSS 下不起作用。</p>
+  <p>按<a href="#ini">怎么改设置文件</a>，把 <code>[FrameGeneration]</code> 下面的 <code>Engine=DLSS</code> 改成 <code>Engine=XeSS</code>，其它不用改：XeSS-FG（Intel model 15）做 2X / 3X / 4X，出厂的 <code>MaxGeneratedFrames=3</code>（4X）直接可用。游戏里照常打开 DLSS 帧生成，选想要的倍率。<code>[XeSSFG]</code> 一节另有两项：<code>FlowResolution</code>（<code>Coarse</code> / <code>Middle</code> / <code>Fine</code>，出厂 <code>Middle</code>，越细越慢）和 <code>UseHudless</code>（出厂 <code>Auto</code> = <code>0</code>：整幅画面含 UI 一起插值，游戏给不给无 HUD 画面都一样；改成 <code>1</code> 是一律要求，游戏没提供时会报错退出；<code>0</code> 与 <code>Auto</code> 相同）。<code>[DLSSG]</code> 一节的设置在 XeSS 下不起作用。</p>
   <p>游戏的后缓冲是 RGBA16F（部分 HDR 输出用这种格式）时，XeSS 拒绝插帧（插帧关），日志里有一条错误级 <code>xefg_feature_refused</code>；运行中才发现缺 XeSS 需要的输入等问题时，日志记一条错误级 <code>xefg_kernel_fatal</code> 写明原因，游戏随即退出。XeSS 跑不了时不会改用 DLSS 帧生成。</p>
   <p>XeSS-FG 跑的是 MFG-Unlocker 1.6.0 移植的 Intel model 15，随包（在 <code>dlssg_sm86\xefg\xefg_kernels.dll</code> 里）；它的 2X 就是 Intel model 18 的图（与原来的 <code>Model=18</code> 输出逐位相同），所以 2026-10-26 起只有这一个模型，<code>[XeSSFG] Model</code> 这一行删除了：旧文件里留着这一行也不读。RTX 3070 上 4X 时，1440p 比默认的 DLSS 快，4K 比它慢约 30 %（离线 GPU 时间，不等于帧率）。其中 46 个程序由 Intel 的程序改来，归 Intel XeSS SDK 条款，见 <code>THIRD_PARTY_NOTICES.txt</code>。</p>
 
@@ -327,7 +327,7 @@ footer { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--lin
   </ol>
   <div class="copy-wrap">
     <div class="copy-row"><button class="copy" type="button" id="copy-report">复制这段</button><span class="copy-state" id="copy-state" role="status"></span></div>
-    <div class="scroll"><pre id="report-template">版本：0.4.1
+    <div class="scroll"><pre id="report-template">版本：0.4.2
 用的是哪个 DLL（version.dll 或换过的哪个）：
 显卡型号：
 驱动版本：
@@ -436,7 +436,7 @@ dlssg_sm86.ini 改过哪些（没改就写“没改”）：
 </section>
 
 <footer>
-  DLSSG 0.4.1 安装手册 · 全部设置的完整说明：<code>docs\INSTALL.md</code> · 版本说明：<code>README.md</code> · 许可：<code>LICENSE.md</code>、<code>THIRD_PARTY_NOTICES.txt</code>
+  DLSSG 0.4.2 安装手册 · 全部设置的完整说明：<code>docs\INSTALL.md</code> · 版本说明：<code>README.md</code> · 许可：<code>LICENSE.md</code>、<code>THIRD_PARTY_NOTICES.txt</code>
 </footer>
 
 </div>
